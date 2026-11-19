@@ -1,0 +1,37 @@
+/* SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+   SPDX-License-Identifier: AGPL-3.0-or-later
+
+   Synthetic upstream class snapshot for CI. In the developer runtime use
+   AKAUNTING_CORE_CSS and AKAUNTING_ELEMENT_CSS for the actual Akaunting build. */
+.bg-body { background-color:#fff; }
+.bg-white { background-color:#fff; }
+.bg-lilac-900 { background-color:#dce2f9; }
+.bg-purple-lighter { background-color:#f2f4fc; }
+.bg-gray-50 { background-color:#f9fafb; }
+.bg-gray-100 { background-color:#f3f4f6; }
+.bg-gray-200 { background-color:#e5e7eb; }
+.bg-gray-300 { background-color:#d1d5db; }
+.bg-blue-100 { background-color:#e6f1f6; }
+.bg-green-100 { background-color:#f1f6ee; }
+.bg-red-100 { background-color:#fef2f2; }
+.bg-orange-100 { background-color:#fff7ed; }
+.bg-green { background-color:#6ea152; }
+.bg-purple { background-color:#55588b; }
+.text-white { color:white; }
+.text-black { color:#424242; }
+.text-black-400 { color:#7b7b7b; }
+.text-purple { color:#55588b; }
+.text-gray-500 { color:#6b7280; }
+.text-green { color:#6ea152; }
+.text-red { color:#cc0000; }
+.text-blue { color:#27718f; }
+.border-gray-200 { border-color:#e5e7eb; }
+.flex { display:flex; }
+.flex-col { flex-direction:column; }
+.bg-gray-50 { background-color:#f9fafb; }
+.hover\:bg-gray-100:hover { background-color:#f3f4f6; }
+.hover\:bg-purple:hover { background-color:#55588b; }
+.hover\:bg-lilac-100:hover { background-color:#f5f7fa; }
+input { color:#424242; background-color:white; }
+.el-input__inner { color:#595959 !important; background-color:white; }
+.el-table--enable-row-hover .el-table__body tr:hover > td { background-color:#f5f7fa; }

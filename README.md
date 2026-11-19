@@ -29,12 +29,20 @@ The login is public and has no authenticated company context. By default its ori
 
 Administrators with `read-settings-company` may view Settings > Theme. Changes require `update-settings-company`. Profile color mode changes require `update-auth-profile` and always affect only the authenticated user. Color mode is stored independently of the currently selected company.
 
-The theme never modifies PDFs, invoices, DANFSe, NFS-e, customer emails or original Akaunting attribution. Changes to the licensed core, redistribution or white-labeling must be evaluated independently under the applicable Akaunting terms.
+The theme never modifies PDFs, invoices, DANFSe, NFS-e, customer emails or original Akaunting attribution. The color palette covers common Akaunting 3.x surfaces and interactions globally in the authenticated administration interface. Third-party modules with custom inline styles or canvas-based charts may still require explicit compatibility testing. Changes to the licensed core, redistribution or white-labeling must be evaluated independently under the applicable Akaunting terms.
 
 ## Development and testing
 
 - `php -l` for PHP files (PHP 8.3).
-- `node --test tests/*.test.cjs` for browser-preference behavior.
+- `node --test tests/*.test.cjs` for browser-preference behavior and palette contracts.
+- `node tests/browser-regression.mjs` for a synthetic dashboard, bank account,
+  dialogs, filters, neutral badges and colored status chips in both modes.
+  Requires Chrome or `CHROME_BIN`. It evaluates computed styles, mouse hover
+  and WCAG AA text contrast. No financial/customer data are used.
+- Validate against the Core's compiled CSS in a local checkout with
+  `AKAUNTING_CORE_CSS=/path/to/app.css AKAUNTING_ELEMENT_CSS=/path/to/element.css node tests/browser-regression.mjs`.
+  The CI defaults to an isolated upstream class fixture; check actual Core CSS
+  after upgrading Akaunting.
 - Integration and visual checks against an isolated, disposable Akaunting installation are required before releasing.
 - Check on desktop and mobile, authenticated and unauthenticated screens, high-contrast colors, forms, tables, popovers, reports, language and right-to-left pages.
 
