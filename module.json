@@ -1,0 +1,14 @@
+{
+  "alias": "theme",
+  "icon": "palette",
+  "version": "0.1.0",
+  "active": 1,
+  "providers": ["Modules\\Theme\\Providers\\Main"],
+  "aliases": {},
+  "files": [],
+  "requires": [],
+  "reports": [],
+  "widgets": [],
+  "settings": [],
+  "routes": {"redirect_after_install": "theme.settings.index"}
+}

@@ -1,0 +1,19 @@
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: |
+          docker run --rm -v "$PWD:/app:ro" php:8.3-cli sh -c 'find /app -name "*.php" -exec php -l {} \; && php /app/tests/appearance-contract.php'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/*.test.cjs

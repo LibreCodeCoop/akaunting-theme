@@ -1,0 +1,8 @@
+{
+  "name": "librecodecoop/akaunting-theme",
+  "description": "Open-source Akaunting appearance and theme personalization",
+  "type": "akaunting-module",
+  "license": "AGPL-3.0-or-later",
+  "require": {"php": "^8.3"},
+  "autoload": {"psr-4": {"Modules\\Theme\\": "./"}}
+}
