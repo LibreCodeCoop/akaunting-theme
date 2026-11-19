@@ -48,12 +48,23 @@ function run({reducedMotion = false, loading = false} = {}) {
         }
         disconnect() {events.disconnected = true;}
     }
-    vm.runInNewContext(code, {window, document, MutationObserver});
-    return {images, unrelated, events, getQuery: () => query};
+    let preload;
+    class Image {
+        complete = false;
+        naturalWidth = 0;
+        constructor() {preload = this;}
+        set src(url) {this._src = url;}
+        get src() {return this._src;}
+    }
+    vm.runInNewContext(code, {window, document, MutationObserver, Image});
+    return {images, unrelated, events, preload, getQuery: () => query};
 }
 
 test('custom spinner replaces only known loading overlays with the per-company GIF', () => {
     const result = run();
+    assert.equal(result.preload.src, gif);
+    assert.equal(result.images[0].src, '/public/img/akaunting-loading.gif', 'Original DOM remains hidden while preloading');
+    result.preload.onload();
     assert.ok(result.getQuery().includes('[x-ref="loadingContent"]'));
     assert.ok(result.getQuery().includes('[x-ref="loadingAbsoluteContent"]'));
     for (const image of result.images) {
@@ -66,6 +77,8 @@ test('custom spinner replaces only known loading overlays with the per-company G
 
 test('reduced-motion users receive the static company icon', () => {
     const result = run({reducedMotion: true});
+    assert.equal(result.preload.src, fallback);
+    result.preload.onload();
     result.images.forEach(image => assert.equal(image.src, fallback));
 });
 
@@ -73,8 +86,19 @@ test('DOM loading state waits for document availability', () => {
     const result = run({loading: true});
     assert.equal(result.images[0].src, '/public/img/akaunting-loading.gif');
     result.events.inserted();
-    assert.equal(result.images[0].src, gif, 'Early DOM insertion must apply branding');
+    assert.equal(result.images[0].src, '/public/img/akaunting-loading.gif', 'Must not show a GIF before preload');
+    result.preload.onload();
+    assert.equal(result.images[0].src, gif, 'Early DOM insertion must apply branding after preload');
     result.events.DOMContentLoaded();
     assert.equal(result.events.disconnected, true, 'Observer must be released after parsing');
     assert.equal(result.images[0].src, gif);
+});
+
+test('unavailable branded GIF falls back to the static LibreCode mark, never the Akaunting animation', () => {
+    const result = run();
+    result.preload.onerror();
+    assert.equal(result.preload.src, fallback);
+    assert.equal(result.images[0].src, '/public/img/akaunting-loading.gif');
+    result.preload.onload();
+    assert.equal(result.images[0].src, fallback);
 });

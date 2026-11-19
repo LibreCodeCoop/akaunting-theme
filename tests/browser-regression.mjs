@@ -78,8 +78,22 @@ const fixture = (mode) => `<!doctype html>
     </div>
     <a id="banking-action" class="bg-white hover:bg-gray-100 text-purple" href="#">Visualizar</a>
   </article>
+  <div x-ref="loadingContent" id="test-core-loader">
+    <img id="core-loading-image" src="/public/img/akaunting-loading.gif" width="160" height="160" />
+  </div>
+  <div x-ref="loadingAbsoluteContent" id="test-core-loader-absolute">
+    <img id="core-loading-absolute" src="/public/img/akaunting-loading.gif" width="160" height="160" />
+  </div>
   <div id="settings-dialog" class="el-dialog bg-white">
      <label class="el-form-item__label" id="dialog-label">Configuração</label>
+  </div>
+  <span class="relative" data-tooltip-target="tooltip-search" data-tooltip-placement="right">Search icon</span>
+  <div id="tooltip-search" role="tooltip"
+      class="inline-block absolute z-20 bg-white text-black rounded-lg border border-gray-200 shadow-sm"
+      style="position:relative;display:inline-block;padding:6px 10px;margin:16px">
+    <span id="tooltip-search-label">Pesquisar</span>
+    <div id="tooltip-search-arrow" data-popper-arrow
+      class="absolute w-2 h-2 before:absolute before:w-2 before:h-2 before:bg-white before:border-gray-200 before:transform before:rotate-45 before:border -left-1 before:border-t-0 before:border-r-0"></div>
   </div>
   <div id="cashflow-chart" class="apexcharts-canvas">
     <span id="chart-legend" class="apexcharts-legend-text" style="color: #424242;">Entrada</span>
@@ -229,6 +243,20 @@ try {
             ['banking action', '#banking-action'],
             ['dialog label', '#dialog-label'],
         ];
+        // With the company spinner configured, the original Akaunting GIF is
+        // invisible before the custom asset downloads and decodes.
+        for (const selector of ['#core-loading-image', '#core-loading-absolute']) {
+            const before = await style(selector);
+            const visibility = await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).visibility`);
+            assert.equal(visibility, 'hidden', 'Core branded GIF must never flash: ' + selector);
+            await evaluate(`(()=>{
+                const image = document.querySelector(${JSON.stringify(selector)});
+                image.src = '/public/storage/akaunting-theme/1/librecode.gif';
+                image.classList.add('lcc-theme-loading-image');
+            })()`);
+            const after = await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).visibility`);
+            assert.equal(after, 'visible', 'Branded GIF must become visible: ' + selector);
+        }
         if (dark) {
             for (const [name, selector] of checks) {
                 const result = await style(selector);
@@ -278,6 +306,22 @@ try {
             checkReadable('cash-flow axis labels', {...axis, color: axis.fill, backgroundColor: chartBackground.backgroundColor});
             const grid = await style('#chart-grid');
             assert.equal(grid.stroke, 'rgb(71, 85, 105)', 'Chart grid should use subdued dark palette');
+            // The Core tooltip arrow is ::before on [data-popper-arrow],
+            // with before:bg-white and before:border-gray-200 utility classes.
+            const tooltip = await style('#tooltip-search');
+            checkReadable('native tooltip text', {
+                ...await style('#tooltip-search-label'),
+                backgroundColor: tooltip.backgroundColor,
+            });
+            const arrow = await evaluate(`(()=>{const a=document.querySelector('#tooltip-search-arrow');
+                const s=getComputedStyle(a, '::before');
+                return {backgroundColor:s.backgroundColor,borderColor:s.borderTopColor};})()`);
+            assert.equal(arrow.backgroundColor, tooltip.backgroundColor,
+                'Native Core tooltip arrow is detached from dark tooltip surface');
+            if (mode === 'dark') {
+                assert.notEqual(arrow.borderColor, 'rgb(229, 231, 235)',
+                    'Tooltip arrow border retains the light theme color');
+            }
             const skeletonPanel = await style('#skeleton-panel');
             assert.equal(skeletonPanel.backgroundColor, 'rgb(31, 41, 55)', 'Loading menu must not flash white');
             const skeletonRail = await style('#skeleton-rail');

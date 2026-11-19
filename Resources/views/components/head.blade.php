@@ -331,6 +331,20 @@ html.lcc-theme-dark .group:hover :is(.group-hover\:text-purple-700, .group-hover
     color: var(--lcc-dark-text) !important;
 }
 
+/* Akaunting's native <x-tooltip> paints the popper arrow with ::before.
+   The pseudo-element is NOT the tooltip surface and keeps its upstream
+   before:bg-white background unless its own CSS is themed. This fixes
+   left/right/top/bottom placements without changing Core templates. */
+html.lcc-theme-dark [role="tooltip"] {
+    background-color: var(--lcc-dark-surface) !important;
+    color: var(--lcc-dark-text) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark [role="tooltip"] [data-popper-arrow]::before {
+    background-color: var(--lcc-dark-surface) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+
 /* ApexCharts renders its own HTML tooltip and SVG labels with light defaults.
    Override only presentation; never change financial data or series colors. */
 html.lcc-theme-dark .apexcharts-tooltip,
@@ -392,6 +406,21 @@ html.lcc-theme-dark [x-ref="loadingMenu"] .animate-pulse.bg-gray-300 {
 html.lcc-theme-dark [x-ref="loadingMenu"] {
     color: var(--lcc-dark-muted) !important;
 }
+@if ($spinner)
+/* The upstream loader is rendered after <head>; prevent any mixed-brand frame.
+   Only the known Core loader overlays are affected; the Core GIF is intact. */
+[x-ref="loadingContent"] img[src*="akaunting-loading.gif"],
+[x-ref="loadingAbsoluteContent"] img[src*="akaunting-loading.gif"] {
+    visibility: hidden !important;
+}
+[x-ref="loadingContent"] img.lcc-theme-loading-image,
+[x-ref="loadingAbsoluteContent"] img.lcc-theme-loading-image {
+    visibility: visible !important;
+    width: min(16rem, 80vw) !important;
+    height: 10rem !important;
+    object-fit: contain !important;
+}
+@endif
 </style>
 <script>
 (function () {
@@ -474,31 +503,44 @@ html.lcc-theme-dark [x-ref="loadingMenu"] {
         '[x-ref="loadingContent"] img[src*="akaunting-loading.gif"]',
         '[x-ref="loadingAbsoluteContent"] img[src*="akaunting-loading.gif"]'
     ].join(',');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let source = reducedMotion && staticLogo ? staticLogo : customGif;
+    // Preload before swapping the source so no original Akaunting GIF frame
+    // is exposed while a network request for the company asset is pending.
+    const preload = new Image();
+    let ready = false;
     function replaceLoaders() {
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const source = reducedMotion && staticLogo ? staticLogo : customGif;
+        if (!ready) return;
         document.querySelectorAll(selectors).forEach(function (img) {
-            if (img.dataset.lccThemeSpinner === 'true') {
-                return;
-            }
+            if (img.dataset.lccThemeSpinner === 'true') return;
             img.src = source;
             img.alt = loadingLabel;
             img.dataset.lccThemeSpinner = 'true';
             img.classList.add('lcc-theme-loading-image');
         });
     }
+    preload.onload = function () {
+        ready = true;
+        replaceLoaders();
+    };
+    preload.onerror = function () {
+        // An invalid or missing GIF must never unhide the upstream image;
+        // fall back to the configured company's static icon instead.
+        if (source !== staticLogo && staticLogo) {
+            source = staticLogo;
+            preload.src = source;
+        }
+    };
     if (document.readyState === 'loading') {
-        // Cover overlays as soon as they are parsed, before DOMContentLoaded.
-        // Observe only inserted nodes; replacing an img src does not re-trigger this.
         const observer = new MutationObserver(replaceLoaders);
         observer.observe(document.documentElement, {childList: true, subtree: true});
         document.addEventListener('DOMContentLoaded', function () {
             replaceLoaders();
             observer.disconnect();
         }, {once: true});
-    } else {
-        replaceLoaders();
     }
+    preload.src = source;
+    if (preload.complete && preload.naturalWidth > 0) preload.onload();
 })();
 </script>
 @endif
