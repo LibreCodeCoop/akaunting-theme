@@ -27,4 +27,6 @@ return [
     'footer_placeholder' => 'Integrações e suporte pela LibreCode',
     'save' => 'Salvar aparência',
     'save_error' => 'Não foi possível salvar a preferência do tema.',
+    'loading_spinner' => 'Animação de carregamento (GIF, até 320×320 pixels, 1 MB)',
+    'spinner_reset' => 'Restaurar animação de carregamento padrão do Akaunting',
 ];

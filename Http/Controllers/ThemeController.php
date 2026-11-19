@@ -37,6 +37,8 @@ final class ThemeController extends Controller
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:512',
             'login_background' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
+            'loading_spinner' => 'nullable|file|mimetypes:image/gif|mimes:gif|dimensions:max_width=320,max_height=320|max:1024',
+            'remove_loading_spinner' => 'sometimes|boolean',
         ]);
 
         $companyId = (int) company_id();
@@ -51,6 +53,14 @@ final class ThemeController extends Controller
                 $options[$key] = $request->file($key)->store('akaunting-theme/' . $companyId, 'public');
             }
         }
+        // Upload takes precedence if both controls were submitted.
+        if ($request->hasFile('loading_spinner')) {
+            $options['loading_spinner'] = $request->file('loading_spinner')
+                ->store('akaunting-theme/' . $companyId, 'public');
+        } elseif ($request->boolean('remove_loading_spinner')) {
+            $options['loading_spinner'] = '';
+        }
+
         Appearance::update($companyId, $options);
 
         return redirect()->route('theme.settings.index')->with('success', trans('theme::general.saved'));

@@ -1,6 +1,8 @@
 @php
     $logo = $options['logo'] ? asset('public/storage/' . $options['logo']) : '';
     $favicon = $options['favicon'] ? asset('public/storage/' . $options['favicon']) : '';
+    $spinner = $options['loading_spinner'] ? asset('public/storage/' . $options['loading_spinner']) : '';
+    $spinnerFallback = $logo;
 @endphp
 @if ($favicon)
 <link rel="icon" href="{{ $favicon }}" type="image/png" id="lcc-theme-favicon">
@@ -328,6 +330,68 @@ html.lcc-theme-dark a:not(.bg-green):not(.bg-purple):not(.bg-red):not(.bg-orange
 html.lcc-theme-dark .group:hover :is(.group-hover\:text-purple-700, .group-hover\:text-purple) {
     color: var(--lcc-dark-text) !important;
 }
+
+/* ApexCharts renders its own HTML tooltip and SVG labels with light defaults.
+   Override only presentation; never change financial data or series colors. */
+html.lcc-theme-dark .apexcharts-tooltip,
+html.lcc-theme-dark .apexcharts-tooltip.apexcharts-theme-light,
+html.lcc-theme-dark .apexcharts-xaxistooltip,
+html.lcc-theme-dark .apexcharts-yaxistooltip {
+    background: var(--lcc-dark-surface) !important;
+    color: var(--lcc-dark-text) !important;
+    border: 1px solid var(--lcc-dark-border) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .34) !important;
+}
+html.lcc-theme-dark .apexcharts-tooltip-title {
+    background: var(--lcc-dark-elevated) !important;
+    color: var(--lcc-dark-text) !important;
+    border-bottom: 1px solid var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark .apexcharts-tooltip-text,
+html.lcc-theme-dark .apexcharts-tooltip-text-y-label,
+html.lcc-theme-dark .apexcharts-tooltip-text-y-value,
+html.lcc-theme-dark .apexcharts-tooltip-text-z-label,
+html.lcc-theme-dark .apexcharts-tooltip-text-z-value,
+html.lcc-theme-dark .apexcharts-xaxistooltip-text,
+html.lcc-theme-dark .apexcharts-yaxistooltip-text {
+    color: var(--lcc-dark-text) !important;
+}
+html.lcc-theme-dark .apexcharts-legend-text {
+    color: var(--lcc-dark-muted) !important;
+}
+html.lcc-theme-dark .apexcharts-xaxis-label,
+html.lcc-theme-dark .apexcharts-yaxis-label,
+html.lcc-theme-dark .apexcharts-text {
+    fill: var(--lcc-dark-muted) !important;
+}
+html.lcc-theme-dark .apexcharts-gridline,
+html.lcc-theme-dark .apexcharts-xaxis-tick,
+html.lcc-theme-dark .apexcharts-yaxis-tick {
+    stroke: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark .apexcharts-xaxistooltip-bottom:before,
+html.lcc-theme-dark .apexcharts-xaxistooltip-bottom:after {
+    border-bottom-color: var(--lcc-dark-surface) !important;
+}
+html.lcc-theme-dark .apexcharts-xaxistooltip-top:before,
+html.lcc-theme-dark .apexcharts-xaxistooltip-top:after {
+    border-top-color: var(--lcc-dark-surface) !important;
+}
+
+/* Loading-menu skeleton is rendered BEFORE the real #sidenav-main.
+   Scope these rules to the exact Core component, not the authenticated menu. */
+html.lcc-theme-dark [x-ref="loadingMenu"] .menu-list {
+    background-color: var(--lcc-dark-surface) !important;
+}
+html.lcc-theme-dark [x-ref="loadingMenu"] > .menu-scroll {
+    background-color: var(--lcc-dark-page) !important;
+}
+html.lcc-theme-dark [x-ref="loadingMenu"] .animate-pulse.bg-gray-300 {
+    background-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark [x-ref="loadingMenu"] {
+    color: var(--lcc-dark-muted) !important;
+}
 </style>
 <script>
 (function () {
@@ -398,3 +462,43 @@ html.lcc-theme-dark .group:hover :is(.group-hover\:text-purple-700, .group-hover
     });
 })();
 </script>
+
+@if ($spinner)
+<script id="lcc-theme-loading-script">
+(function () {
+    'use strict';
+    const customGif = @json($spinner);
+    const staticLogo = @json($spinnerFallback);
+    const loadingLabel = @json(trans('general.loading'));
+    const selectors = [
+        '[x-ref="loadingContent"] img[src*="akaunting-loading.gif"]',
+        '[x-ref="loadingAbsoluteContent"] img[src*="akaunting-loading.gif"]'
+    ].join(',');
+    function replaceLoaders() {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const source = reducedMotion && staticLogo ? staticLogo : customGif;
+        document.querySelectorAll(selectors).forEach(function (img) {
+            if (img.dataset.lccThemeSpinner === 'true') {
+                return;
+            }
+            img.src = source;
+            img.alt = loadingLabel;
+            img.dataset.lccThemeSpinner = 'true';
+            img.classList.add('lcc-theme-loading-image');
+        });
+    }
+    if (document.readyState === 'loading') {
+        // Cover overlays as soon as they are parsed, before DOMContentLoaded.
+        // Observe only inserted nodes; replacing an img src does not re-trigger this.
+        const observer = new MutationObserver(replaceLoaders);
+        observer.observe(document.documentElement, {childList: true, subtree: true});
+        document.addEventListener('DOMContentLoaded', function () {
+            replaceLoaders();
+            observer.disconnect();
+        }, {once: true});
+    } else {
+        replaceLoaders();
+    }
+})();
+</script>
+@endif

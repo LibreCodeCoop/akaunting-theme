@@ -81,6 +81,34 @@ const fixture = (mode) => `<!doctype html>
   <div id="settings-dialog" class="el-dialog bg-white">
      <label class="el-form-item__label" id="dialog-label">Configuração</label>
   </div>
+  <div id="cashflow-chart" class="apexcharts-canvas">
+    <span id="chart-legend" class="apexcharts-legend-text" style="color: #424242;">Entrada</span>
+    <svg width="240" height="48">
+      <text x="10" y="20" id="chart-axis" class="apexcharts-text apexcharts-yaxis-label" style="fill: #424242;">R$ 140.000,00</text>
+      <line id="chart-grid" class="apexcharts-gridline" x1="0" y1="35" x2="220" y2="35" style="stroke: #eeeeee;" />
+    </svg>
+    <div id="chart-tooltip" class="apexcharts-tooltip apexcharts-theme-light"
+        style="display:block; background: #f8fafc; color: #3d3d3d;">
+      <div id="chart-tooltip-title" class="apexcharts-tooltip-title"
+         style="background: #eeeeee; color: #333333;">abr 2026</div>
+      <div class="apexcharts-tooltip-text">
+        <span id="chart-tooltip-label" class="apexcharts-tooltip-text-y-label" style="color: #7b7b7b;">Entrada:</span>
+        <span id="chart-tooltip-value" class="apexcharts-tooltip-text-y-value" style="color:#7b7b7b;">R$ 72.697,85</span>
+      </div>
+    </div>
+    <div class="apexcharts-xaxistooltip apexcharts-xaxistooltip-bottom" id="chart-x-tooltip"
+      style="background:#f8fafc;color:#424242;">
+      <span class="apexcharts-xaxistooltip-text" id="chart-x-tooltip-text">abr 2026</span>
+    </div>
+  </div>
+  <div x-ref="loadingMenu" id="loading-menu-skeleton" class="flex">
+    <div class="menu-scroll bg-lilac-900" id="skeleton-rail">
+      <div class="animate-pulse bg-gray-300" id="skeleton-rail-dot">•</div>
+    </div>
+    <nav class="menu-list" id="skeleton-panel" style="background-color:#f2f4fc">
+      <div class="animate-pulse bg-gray-300" id="skeleton-dot">&nbsp;</div>
+    </nav>
+  </div>
 </div></div>
 </body></html>`;
 
@@ -169,7 +197,7 @@ try {
     async function style(selector) {
         return await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});
             if (!e) throw Error('missing selector'); const s=getComputedStyle(e);
-            return {color:s.color,backgroundColor:s.backgroundColor,borderColor:s.borderColor};})()`);
+            return {color:s.color,backgroundColor:s.backgroundColor,borderColor:s.borderColor,fill:s.fill,stroke:s.stroke};})()`);
     }
     async function hover(selector, query = selector) {
         const documentNode = (await call('DOM.getDocument', {depth: -1})).root.nodeId;
@@ -227,9 +255,43 @@ try {
             checkReadable('banking action on hover', bankingHover);
             const green = await style('#new-dashboard');
             assert.equal(green.color, 'rgb(255, 255, 255)', 'Primary action foreground must remain white');
+            // ApexCharts adds inline light-colored defaults to both HTML and SVG.
+            for (const [name, selector] of [
+                ['cash-flow tooltip', '#chart-tooltip'],
+                ['cash-flow title', '#chart-tooltip-title'],
+                ['cash-flow label', '#chart-tooltip-label'],
+                ['cash-flow value', '#chart-tooltip-value'],
+                ['cash-flow horizontal tooltip', '#chart-x-tooltip'],
+            ]) {
+                const computed = await style(selector);
+                if (name === 'cash-flow label' || name === 'cash-flow value') {
+                    const parent = await style('#chart-tooltip');
+                    checkReadable(name, {...computed, backgroundColor: parent.backgroundColor});
+                } else {
+                    checkReadable(name, computed);
+                }
+            }
+            const chartBackground = await style('body');
+            const legend = await style('#chart-legend');
+            checkReadable('cash-flow legend', {...legend, backgroundColor: chartBackground.backgroundColor});
+            const axis = await style('#chart-axis');
+            checkReadable('cash-flow axis labels', {...axis, color: axis.fill, backgroundColor: chartBackground.backgroundColor});
+            const grid = await style('#chart-grid');
+            assert.equal(grid.stroke, 'rgb(71, 85, 105)', 'Chart grid should use subdued dark palette');
+            const skeletonPanel = await style('#skeleton-panel');
+            assert.equal(skeletonPanel.backgroundColor, 'rgb(31, 41, 55)', 'Loading menu must not flash white');
+            const skeletonRail = await style('#skeleton-rail');
+            assert.equal(skeletonRail.backgroundColor, 'rgb(17, 24, 39)', 'Loading icon rail must match dark mode');
+            const skeletonDot = await style('#skeleton-dot');
+            assert.equal(skeletonDot.backgroundColor, 'rgb(71, 85, 105)', 'Loading placeholders must be dark');
+            console.log(mode, 'chart/skeleton themes OK');
         } else {
             const badge = await style('#user-badge');
             assert.equal(badge.backgroundColor, 'rgb(220, 226, 249)', 'Light mode must preserve upstream badge colors');
+            const skeleton = await style('#skeleton-panel');
+            assert.equal(skeleton.backgroundColor, 'rgb(242, 244, 252)', 'Light skeleton should retain Core palette');
+            const tip = await style('#chart-tooltip');
+            assert.equal(tip.backgroundColor, 'rgb(248, 250, 252)', 'Light tooltip should remain native');
         }
         if (process.env.AKAUNTING_THEME_SCREENSHOTS) {
             mkdirSync(process.env.AKAUNTING_THEME_SCREENSHOTS, {recursive: true});

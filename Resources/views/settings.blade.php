@@ -27,13 +27,23 @@
                     </label>
                     @endforeach
                 </div>
-                @foreach (['logo' => trans('theme::general.logo'), 'favicon' => trans('theme::general.favicon'), 'login_background' => trans('theme::general.login_background')] as $key => $label)
+                @foreach (['logo' => trans('theme::general.logo'), 'favicon' => trans('theme::general.favicon'), 'login_background' => trans('theme::general.login_background'), 'loading_spinner' => trans('theme::general.loading_spinner')] as $key => $label)
                 <label class="grid gap-1">
                     <span>{{ $label }}</span>
-                    <input type="file" name="{{ $key }}" accept="image/png,image/jpeg,image/webp">
+                    <input type="file" name="{{ $key }}"
+                           accept="{{ $key === 'loading_spinner' ? 'image/gif' : 'image/png,image/jpeg,image/webp' }}">
                 </label>
                 @if ($options[$key])
                 <p class="text-xs">{{ trans('theme::general.configured_image') }}</p>
+                @if ($key === 'loading_spinner')
+                    <img src="{{ asset('public/storage/' . $options[$key]) }}"
+                         alt="{{ trans('theme::general.loading_spinner') }}"
+                         class="w-24 h-24 object-contain" loading="lazy">
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="remove_loading_spinner" value="1">
+                        <span>{{ trans('theme::general.spinner_reset') }}</span>
+                    </label>
+                @endif
                 @endif
                 @endforeach
                 <label class="flex items-center gap-2">

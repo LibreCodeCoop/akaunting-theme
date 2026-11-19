@@ -27,4 +27,6 @@ return [
     'footer_placeholder' => 'Integrations and support by LibreCode',
     'save' => 'Save appearance',
     'save_error' => 'Unable to save theme preference.',
+    'loading_spinner' => 'Loading animation (GIF, up to 320×320 pixels, 1 MB)',
+    'spinner_reset' => 'Restore default Akaunting loading animation',
 ];

@@ -16,6 +16,7 @@ final class Appearance
         'logo' => '',
         'favicon' => '',
         'login_background' => '',
+        'loading_spinner' => '',
         'login_slider' => true,
         'sidebar_color' => '#ffffff',
         'menu_color' => '#ffffff',
