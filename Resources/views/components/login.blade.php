@@ -1,7 +1,7 @@
 @php
-    $background = $options['login_background'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($options['login_background']) : null;
-    $favicon = $options['favicon'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($options['favicon']) : null;
-    $logo = $options['logo'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($options['logo']) : null;
+    $background = $options['login_background'] ? asset('public/storage/' . $options['login_background']) : null;
+    $favicon = $options['favicon'] ? asset('public/storage/' . $options['favicon']) : null;
+    $logo = $options['logo'] ? asset('public/storage/' . $options['logo']) : null;
 @endphp
 @if ($favicon)
 <link rel="icon" href="{{ $favicon }}" type="image/png">

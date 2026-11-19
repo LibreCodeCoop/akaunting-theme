@@ -19,7 +19,7 @@ The module adds configurable company colors, company imagery, a public login bac
 
 ## Install
 
-Install using the Akaunting module system with module alias `theme`; do not patch Core. Run module migrations before enabling the module, then clear compiled views and application cache. A public storage symlink (`php artisan storage:link`) is needed for uploaded, non-sensitive brand images.
+Install using the Akaunting module system with module alias `theme`; do not patch Core. Run module migrations before enabling the module, then clear compiled views and application cache. A public storage symlink (`php artisan storage:link`) is needed for uploaded, non-sensitive brand images. Akaunting 3 serves public assets under `/public/`, so theme uploads use `/public/storage/` rather than the Core's protected `/storage/` URL.
 
 Akaunting 3.3.x/PHP 8.3 is the development target. Verify runtime compatibility with your exact Core version before deployment; do not assume the module is production-certified solely because it installs.
 

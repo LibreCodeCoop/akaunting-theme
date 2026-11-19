@@ -1,6 +1,6 @@
 @php
-    $logo = $options['logo'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($options['logo']) : '';
-    $favicon = $options['favicon'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($options['favicon']) : '';
+    $logo = $options['logo'] ? asset('public/storage/' . $options['logo']) : '';
+    $favicon = $options['favicon'] ? asset('public/storage/' . $options['favicon']) : '';
 @endphp
 @if ($favicon)
 <link rel="icon" href="{{ $favicon }}" type="image/png" id="lcc-theme-favicon">
