@@ -15,6 +15,8 @@ The module adds configurable company colors, company imagery, a public login bac
 - Login slider visibility and trusted, single-instance public login branding.
 - Additional footer attribution and HTTPS support/documentation links.
 - Native Akaunting loading-menu skeleton and ApexCharts SVG legends, axis labels and HTML tooltip colors for dark mode.
+- Native Core tooltip arrows (all orientations) match their popover background in dark mode, preventing white diamonds.
+- Company loading asset is preloaded; the stock Akaunting GIF is hidden immediately to prevent mixed-brand flashes.
 - Automatic dark mode following the browser/system setting, persistent per-user **System / Light / Dark** choices, and a one-click Light/Dark switch in the profile menu.
 - Preferences presented in the user's own profile without overriding the Core profile view.
 - CSRF protection, permission checks, company isolation and strict image/color/link validation.
@@ -25,7 +27,7 @@ Install using the Akaunting module system with module alias `theme`; do not patc
 
 Akaunting 3.3.x/PHP 8.3 is the development target. Verify runtime compatibility with your exact Core version before deployment; do not assume the module is production-certified solely because it installs.
 
-The user-configured loading GIF is used only in **authenticated** Core loading-content and loading-absolute overlays, and never changes the public login or the Core's original GIF file. The included example, `Resources/assets/spinners/librecode-loading.gif`, references LibreCode's institutional artwork; it is **not** a default for other companies. Upload via Settings > Theme to activate for a specific company. As an accessibility measure, browsers requesting reduced motion receive the company's static logo when available.
+The user-configured loading GIF is preloaded before replacing the original image source and is used only in **authenticated** Core loading-content and loading-absolute overlays, and never changes the public login or the Core's original GIF file. The included example, `Resources/assets/spinners/librecode-loading.gif`, references LibreCode's institutional artwork; it is **not** a default for other companies. Upload via Settings > Theme to activate for a specific company. As an accessibility measure, browsers requesting reduced motion receive the company's static logo when available.
 
 The login is public and has no authenticated company context. By default its original branding is unchanged. To explicitly select a trusted company as the **instance-wide** public login identity, set `AKAUNTING_THEME_LOGIN_COMPANY_ID` in application configuration and rebuild configuration cache. Avoid reading a company id from an unauthenticated request.
 
