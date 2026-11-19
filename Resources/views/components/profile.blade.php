@@ -39,7 +39,7 @@
                 await window.LccTheme.save(select.value);
             } catch (error) {
                 select.value = previous;
-                status.textContent = 'Unable to save preference.';
+                status.textContent = @json(trans('theme::general.save_error'));
             } finally {
                 select.disabled = false;
             }
