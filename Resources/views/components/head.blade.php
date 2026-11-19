@@ -196,6 +196,138 @@ html.lcc-theme-dark table tbody tr:hover > th {
 @media (prefers-reduced-motion: no-preference) {
     html.lcc-theme-dark * { scrollbar-color: #4b5563 #111827; }
 }
+
+/*
+ * Global Akaunting 3.x dark-mode surface contract.
+ *
+ * All neutral backgrounds and foregrounds map to these semantic tokens, rather
+ * than relying on route-specific view markup. Keep meaningful state/status
+ * colors separate: a red error and a green success must remain identifiable.
+ * The rules are scoped to html.lcc-theme-dark and do not alter Akaunting Core.
+ */
+html.lcc-theme-dark {
+    --lcc-dark-page: #111827;
+    --lcc-dark-surface: #1f2937;
+    --lcc-dark-surface-alt: #273447;
+    --lcc-dark-elevated: #334155;
+    --lcc-dark-hover: #334155;
+    --lcc-dark-border: #475569;
+    --lcc-dark-text: #f1f5f9;
+    --lcc-dark-muted: #cbd5e1;
+    --lcc-dark-link: #a5b4fc;
+}
+
+/* Tailwind surface utilities used throughout server-rendered pages and Vue. */
+html.lcc-theme-dark :is(
+    .bg-white,
+    .bg-gray-50, .bg-gray-100, .bg-black-50, .bg-black-100,
+    .bg-purple-lighter, .bg-lilac-100, .bg-lilac-900,
+    .bg-wisteria, .bg-gray-200, .bg-purple-100
+) {
+    background-color: var(--lcc-dark-surface) !important;
+}
+html.lcc-theme-dark :is(.bg-gray-200, .bg-gray-300, .bg-lilac-300, .bg-purple-200) {
+    background-color: var(--lcc-dark-elevated) !important;
+}
+/* Pale informational chips are not surfaces for normal white-on-light labels. */
+html.lcc-theme-dark .bg-blue-100 {
+    background-color: #1e3652 !important;
+    color: #bfdbfe !important;
+}
+html.lcc-theme-dark .bg-green-100 {
+    background-color: #123426 !important;
+    color: #86efac !important;
+}
+html.lcc-theme-dark .bg-red-100 {
+    background-color: #45232b !important;
+    color: #fca5a5 !important;
+}
+html.lcc-theme-dark .bg-orange-100,
+html.lcc-theme-dark .bg-yellow-100 {
+    background-color: #48321c !important;
+    color: #fde68a !important;
+}
+
+/* Contrast-safe normal and muted text on any dark neutral surface. */
+html.lcc-theme-dark :is(
+    .text-black, .text-black-200, .text-black-300, .text-black-400,
+    .text-black-500, .text-black-600, .text-black-700,
+    .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600,
+    .text-purple, .text-purple-500, .text-purple-600, .text-purple-700
+) {
+    color: var(--lcc-dark-text) !important;
+}
+html.lcc-theme-dark :is(.text-gray-500, .text-gray-400, .text-muted, .text-light-gray) {
+    color: var(--lcc-dark-muted) !important;
+}
+html.lcc-theme-dark :is(.text-green, .text-green-500, .text-green-700) {
+    color: #86efac !important;
+}
+html.lcc-theme-dark :is(.text-red, .text-red-500, .text-red-600, .text-red-700) {
+    color: #fca5a5 !important;
+}
+html.lcc-theme-dark :is(.text-blue, .text-blue-500, .text-blue-700) {
+    color: #93c5fd !important;
+}
+
+/* Core's flex table is distinct from Element UI's HTML table. Its rows carry
+ * the background-hover utility on TR itself, not on TD as Element UI does. */
+html.lcc-theme-dark table.flex.flex-col tbody tr.group,
+html.lcc-theme-dark table.flex.flex-col tbody tr[data-table-list] {
+    background-color: var(--lcc-dark-surface) !important;
+    color: var(--lcc-dark-text) !important;
+}
+html.lcc-theme-dark table.flex.flex-col tbody tr.group:hover,
+html.lcc-theme-dark table.flex.flex-col tbody tr[data-table-list]:hover,
+html.lcc-theme-dark table.flex.flex-col tbody tr.group:focus-within {
+    background-color: var(--lcc-dark-hover) !important;
+}
+html.lcc-theme-dark table.flex.flex-col tbody tr :is(th,td),
+html.lcc-theme-dark table.flex.flex-col tbody tr:hover :is(th,td) {
+    color: var(--lcc-dark-text) !important;
+}
+/* Table row badges explicitly opt in to a raised surface and readable text. */
+html.lcc-theme-dark table.flex.flex-col :is(.bg-lilac-900,.bg-gray-200,.bg-purple-lighter) {
+    background-color: var(--lcc-dark-elevated) !important;
+    color: var(--lcc-dark-text) !important;
+}
+
+/* Form/dialog/popup surfaces need an opaque backdrop when opened above a page. */
+html.lcc-theme-dark :is(
+    .dropdown-menu, .el-popover, .el-tooltip__popper, .el-select-dropdown,
+    .el-picker-panel, .el-dialog, .el-message-box, .el-notification,
+    .el-popover__title, .el-table__header-wrapper, .el-table__body-wrapper
+) {
+    background-color: var(--lcc-dark-surface) !important;
+    color: var(--lcc-dark-text) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select,
+    .el-input__inner, .el-textarea__inner) {
+    color: var(--lcc-dark-text) !important;
+    background-color: var(--lcc-dark-surface) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark :is(input,textarea)::placeholder {
+    color: #cbd5e1 !important;
+}
+
+/* Existing green 'New' actions are too bright for white text. Keep semantics. */
+html.lcc-theme-dark :is(a.bg-green,button.bg-green,[role="button"].bg-green) {
+    background-color: #32632c !important;
+    color: #ffffff !important;
+}
+html.lcc-theme-dark :is(a.bg-green,button.bg-green,[role="button"].bg-green):hover {
+    background-color: #285324 !important;
+    color: #ffffff !important;
+}
+/* Light links are for text links, not colored actions or status chips. */
+html.lcc-theme-dark a:not(.bg-green):not(.bg-purple):not(.bg-red):not(.bg-orange):not(.bg-blue) {
+    color: var(--lcc-dark-link);
+}
+html.lcc-theme-dark .group:hover :is(.group-hover\:text-purple-700, .group-hover\:text-purple) {
+    color: var(--lcc-dark-text) !important;
+}
 </style>
 <script>
 (function () {
