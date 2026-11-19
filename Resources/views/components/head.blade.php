@@ -11,9 +11,9 @@
     --lcc-theme-menu: {{ $options['menu_color'] }};
     --lcc-theme-content: {{ $options['content_color'] }};
 }
-body:not(.lcc-theme-dark) .js-main-menu { background-color: var(--lcc-theme-sidebar); }
-body:not(.lcc-theme-dark) .main-menu { background-color: var(--lcc-theme-menu); }
-body:not(.lcc-theme-dark) #main-body { background-color: var(--lcc-theme-content); }
+html:not(.lcc-theme-dark) body .js-main-menu { background-color: var(--lcc-theme-sidebar); }
+html:not(.lcc-theme-dark) body .main-menu { background-color: var(--lcc-theme-menu); }
+html:not(.lcc-theme-dark) body #main-body { background-color: var(--lcc-theme-content); }
 @if ($logo)
 /* Add the company identity without erasing the upstream Akaunting logo. */
 .js-main-menu .lcc-theme-company-logo { display: inline-block; width: 28px; height: 28px; object-fit: contain; margin-right: 8px; }
