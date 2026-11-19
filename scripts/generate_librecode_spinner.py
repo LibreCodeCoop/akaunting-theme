@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MARK = ROOT / "Resources/assets/spinners/librecode-mark.png"
-DEFAULT_TARGET = ROOT / "Resources/assets/spinners/librecode-loading.gif"
+DEFAULT_TARGET = ROOT / "Resources/assets/spinners/librecode-wordmark-loading.gif"
 
 
 def render(mark_path: Path, target: Path) -> None:
