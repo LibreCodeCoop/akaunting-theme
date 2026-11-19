@@ -331,7 +331,7 @@ html.lcc-theme-dark .group:hover :is(.group-hover\:text-purple-700, .group-hover
     color: var(--lcc-dark-text) !important;
 }
 
-/* Akaunting's native <x-tooltip> paints the popper arrow with ::before.
+/* Akaunting's native tooltip Blade component paints the popper arrow with ::before.
    The pseudo-element is NOT the tooltip surface and keeps its upstream
    before:bg-white background unless its own CSS is themed. This fixes
    left/right/top/bottom placements without changing Core templates. */
