@@ -117,6 +117,6 @@ final class CompanyTransfer
             return $host;
         }
         $domain = DomainRegistry::activeForHost($host);
-        return $domain && DomainRegistry::validSubdomain($host, $base) ? $host : null;
+        return $domain && DomainRegistry::validSubdomain($host, $base, LoginAppearance::options()['alias_zone']) ? $host : null;
     }
 }

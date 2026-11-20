@@ -28,10 +28,14 @@ final class LoginSettingsController extends Controller
 
         $data = $request->validate([
             'base_host' => 'required|string|max:253|regex:/^(?:[a-z0-9-]+\\.)+[a-z]{2,}$/D',
+            'alias_zone' => 'nullable|string|max:253|regex:/^(?:[a-z0-9-]+\\.)+[a-z]{2,}$/D',
+            'footer_text' => 'nullable|string|max:180',
+            'footer_url' => 'nullable|url|starts_with:https://|max:400',
             'brand_name' => 'nullable|string|max:80',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:512',
             'login_background' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
+            'background_opacity' => 'nullable|integer|min:0|max:100',
             'login_slider' => 'sometimes|boolean',
             'remove_logo' => 'sometimes|boolean',
             'remove_favicon' => 'sometimes|boolean',
@@ -42,6 +46,15 @@ final class LoginSettingsController extends Controller
             'slide_caption.*' => 'nullable|string|max:280',
         ]);
         $baseHost = DomainRegistry::normalize($data['base_host']);
+        $aliasZone = DomainRegistry::normalize((string) ($data['alias_zone'] ?? ''));
+        // Trust an organizational alias zone only when the actual canonical
+        // instance host is its immediate child; never accept external domains.
+        if ($aliasZone !== '' &&
+            ! DomainRegistry::validSubdomain($baseHost, $aliasZone)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'alias_zone' => trans('theme::general.invalid_alias_zone'),
+            ]);
+        }
         $current = LoginAppearance::options();
         $requestHost = DomainRegistry::normalize($request->getHost());
 
@@ -56,10 +69,20 @@ final class LoginSettingsController extends Controller
             abort(422, 'Use the main instance domain as the canonical login host.');
         }
 
+        if ($aliasZone !== ($current['alias_zone'] ?? '') &&
+            \Illuminate\Support\Facades\DB::table('lcc_theme_domains')
+                ->where('status', 'active')->exists()) {
+            abort(422, trans('theme::general.alias_zone_active_block'));
+        }
+
         $changes = [
             'base_host' => $baseHost,
+            'alias_zone' => $aliasZone,
+            'footer_text' => trim((string) ($data['footer_text'] ?? '')),
+            'footer_url' => trim((string) ($data['footer_url'] ?? '')),
             'brand_name' => $data['brand_name'] ?? '',
             'login_slider' => $request->boolean('login_slider'),
+            'background_opacity' => (int) ($data['background_opacity'] ?? $current['background_opacity']),
         ];
         foreach (['logo', 'favicon', 'login_background'] as $name) {
             if ($request->hasFile($name)) {

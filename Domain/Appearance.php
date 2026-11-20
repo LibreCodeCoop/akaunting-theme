@@ -26,6 +26,7 @@ final class Appearance
         'support_url' => '',
         'documentation_url' => '',
         'footer_credit' => '',
+        'footer_url' => '',
     ];
 
     public static function options(int $companyId): array

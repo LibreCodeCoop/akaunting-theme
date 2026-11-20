@@ -42,7 +42,7 @@ final class DomainController extends Controller
         $host = DomainRegistry::normalize($data['host']);
         $base = LoginAppearance::options()['base_host'];
 
-        if (! DomainRegistry::validSubdomain($host, $base)) {
+        if (! DomainRegistry::validSubdomain($host, $base, LoginAppearance::options()['alias_zone'])) {
             throw ValidationException::withMessages(['host' =>
                 trans('theme::general.invalid_company_domain')]);
         }
@@ -72,7 +72,7 @@ final class DomainController extends Controller
         $record = $this->ownedDomain($domain);
         $base = LoginAppearance::options()['base_host'];
 
-        if (! DomainRegistry::validSubdomain($record->host, $base) ||
+        if (! DomainRegistry::validSubdomain($record->host, $base, LoginAppearance::options()['alias_zone']) ||
             ! DomainRegistry::verifyDns($record->host, $record->verification_token)) {
             throw ValidationException::withMessages(['host' =>
                 trans('theme::general.domain_dns_unverified')]);
@@ -80,6 +80,10 @@ final class DomainController extends Controller
         if (! DomainRegistry::verifyTls($record->host)) {
             throw ValidationException::withMessages(['host' =>
                 trans('theme::general.domain_https_unverified')]);
+        }
+        if (! DomainRegistry::verifyHostRoute($record->host, $record->verification_token)) {
+            throw ValidationException::withMessages(['host' =>
+                trans('theme::general.domain_origin_unverified')]);
         }
 
         DB::transaction(static function () use ($record): void {

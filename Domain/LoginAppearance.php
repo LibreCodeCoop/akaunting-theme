@@ -13,10 +13,14 @@ final class LoginAppearance
 {
     public const DEFAULTS = [
         'base_host' => '',
+        'alias_zone' => '',
         'brand_name' => '',
+        'footer_text' => '',
+        'footer_url' => '',
         'logo' => '',
         'favicon' => '',
         'login_background' => '',
+        'background_opacity' => 10,
         'login_slider' => true,
         'slides' => [],
     ];
@@ -71,7 +75,7 @@ final class LoginAppearance
             return $options;
         }
         $domain = DomainRegistry::activeForHost($host);
-        if (! $domain || ! DomainRegistry::validSubdomain($host, $baseHost)) {
+        if (! $domain || ! DomainRegistry::validSubdomain($host, $baseHost, (string) $options['alias_zone'])) {
             return null;
         }
 
@@ -81,6 +85,11 @@ final class LoginAppearance
             if ($company[$key] !== '') {
                 $merged[$key] = $company[$key];
             }
+        }
+        if (trim((string) ($company['footer_credit'] ?? '')) !== '') {
+            $merged['footer_text'] = $company['footer_credit'];
+            // Never inherit an unrelated global link for a tenant credit.
+            $merged['footer_url'] = $company['footer_url'];
         }
         $merged['login_slider'] = $company['login_inherit_slider']
             ? (bool) $options['login_slider'] : (bool) $company['login_slider'];

@@ -33,7 +33,7 @@ final class HostContext
         $domain = $isCanonical ? null : DomainRegistry::activeForHost($host);
 
         if (! $isCanonical &&
-            (! $domain || ! DomainRegistry::validSubdomain($host, $base))) {
+            (! $domain || ! DomainRegistry::validSubdomain($host, $base, LoginAppearance::options()['alias_zone']))) {
             abort(404, 'Unknown instance domain.');
         }
 

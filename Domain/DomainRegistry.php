@@ -16,22 +16,32 @@ final class DomainRegistry
         return strtolower(rtrim(trim($host), '.'));
     }
 
-    public static function validSubdomain(string $host, string $baseHost): bool
+    public static function validSubdomain(string $host, string $baseHost, string $aliasZone = ''): bool
     {
         $host = self::normalize($host);
         $baseHost = self::normalize($baseHost);
-        if ($baseHost === '' || ! preg_match('/^(?:[a-z0-9-]+\.)+[a-z]{2,}$/D', $baseHost)) {
+        $aliasZone = self::normalize($aliasZone);
+
+        // A company may use either an immediate child of the instance host
+        // or, with an administrator-configured trust zone, a sibling hostname
+        // under the same organizational domain. Never infer eTLD+1.
+        if (self::oneLabelBelow($host, $baseHost)) {
+            return true;
+        }
+        return $aliasZone !== '' && self::oneLabelBelow($baseHost, $aliasZone)
+            && $host !== $baseHost && self::oneLabelBelow($host, $aliasZone);
+    }
+
+    private static function oneLabelBelow(string $host, string $parent): bool
+    {
+        if (! preg_match('/^(?:[a-z0-9-]+\.)+[a-z]{2,}$/D', $parent)) {
             return false;
         }
-
-        // Exactly one label below the configured instance host. No arbitrary
-        // customer-supplied redirect domains, IP literals or wildcard hosts.
-        $suffix = '.' . $baseHost;
+        $suffix = '.' . $parent;
         if (! str_ends_with($host, $suffix)) {
             return false;
         }
         $label = substr($host, 0, -strlen($suffix));
-
         return (bool) preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/D', $label);
     }
 
@@ -68,7 +78,7 @@ final class DomainRegistry
 
     public static function verifyDns(string $host, string $token): bool
     {
-        if (! self::validSubdomain($host, LoginAppearance::options()['base_host'])) {
+        if (! self::validSubdomain($host, LoginAppearance::options()['base_host'], LoginAppearance::options()['alias_zone'])) {
             return false;
         }
         $records = dns_get_record('_akaunting-theme.' . $host, DNS_TXT);
@@ -80,9 +90,62 @@ final class DomainRegistry
         return false;
     }
 
+    public static function verifyHostRoute(string $host, string $token): bool
+    {
+        $settings = LoginAppearance::options();
+        if (! self::validSubdomain($host, $settings['base_host'], $settings['alias_zone']) ||
+            ! preg_match('/^[a-f0-9]{48}$/D', $token)) {
+            return false;
+        }
+
+        // Verify the same application responds through this hostname, not
+        // merely a different HTTPS service sharing a valid certificate.
+        // DNS is resolved to a checked public IP, then pinned for the GET.
+        $records = dns_get_record($host, DNS_A | DNS_AAAA);
+        foreach ($records ?: [] as $record) {
+            $ip = $record['ip'] ?? $record['ipv6'] ?? null;
+            if (! is_string($ip) || ! filter_var($ip, FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                continue;
+            }
+            $address = str_contains($ip, ':') ? '[' . $ip . ']' : $ip;
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => "Host: {$host}\r\nConnection: close\r\n",
+                    'follow_location' => 0,
+                    'timeout' => 5,
+                    'ignore_errors' => true,
+                ],
+                'ssl' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'peer_name' => $host,
+                    'SNI_enabled' => true,
+                    'SNI_server_name' => $host,
+                ],
+            ]);
+            $url = 'https://' . $address . '/theme/domain-proof/' . $token;
+            $stream = @fopen($url, 'rb', false, $context);
+            if (! is_resource($stream)) {
+                continue;
+            }
+            $meta = stream_get_meta_data($stream);
+            $body = stream_get_contents($stream, 128);
+            fclose($stream);
+            $status = (string) ($meta['wrapper_data'][0] ?? '');
+            if (preg_match('#^HTTP/\S+ 200(?: |$)#', $status) &&
+                is_string($body) &&
+                hash_equals('akaunting-theme-origin=' . $token, $body)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static function verifyTls(string $host): bool
     {
-        if (! self::validSubdomain($host, LoginAppearance::options()['base_host'])) {
+        if (! self::validSubdomain($host, LoginAppearance::options()['base_host'], LoginAppearance::options()['alias_zone'])) {
             return false;
         }
         // Resolve and reject private/reserved destinations before opening TLS.

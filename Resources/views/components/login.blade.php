@@ -19,6 +19,19 @@
 <link rel="icon" href="{{ $favicon }}" type="image/png" id="lcc-theme-login-favicon">
 @endif
 <style id="lcc-theme-public-login">
+#lcc-theme-login-footer {
+    position: fixed;
+    right: 6%;
+    bottom: 0.65rem;
+    max-width: 75%;
+    z-index: 10;
+    color: #64748b !important;
+}
+#lcc-theme-login-footer a { color: #475569; text-decoration: underline; }
+@media (max-width: 640px) {
+    #lcc-theme-login-footer { position: static; padding: 0.5rem 1rem; text-align: center; max-width: 100%; }
+}
+
 @if ($background)
 /* Keep the supplied artwork as a quiet background layer. Some company
    assets contain large lettering; full-strength 'cover' can put that lettering
@@ -34,10 +47,10 @@
     position: absolute;
     inset: 0;
     background-image: url("{{ $background }}");
-    background-size: contain;
+    background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    opacity: 0.10;
+    opacity: {{ max(0, min(100, (int) ($options['background_opacity'] ?? 10))) / 100 }};
     pointer-events: none;
     z-index: 0;
 }
@@ -50,7 +63,7 @@
     border-radius: 1rem;
 }
 @media (max-width: 1023px) {
-    #app::before { opacity: 0.06; }
+    #app::before { opacity: {{ max(0, min(100, (int) ($options['background_opacity'] ?? 10))) / 160 }}; }
 }
 @endif
 @if (! $options['login_slider'])

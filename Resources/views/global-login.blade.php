@@ -25,12 +25,23 @@
                             placeholder="example.org" value="{{ old('base_host', $options['base_host']) }}">
                     </label>
                     <p class="text-xs text-gray-500">{{ trans('theme::general.host_warning') }}</p>
+                    <label class="grid gap-1">
+                        <span>{{ trans('theme::general.alias_zone_label') }}</span>
+                        <input type="text" name="alias_zone" class="border rounded-md p-2" maxlength="253"
+                            placeholder="example.org" value="{{ old('alias_zone', $options['alias_zone']) }}">
+                    </label>
+                    <p class="text-xs text-gray-500">{{ trans('theme::general.alias_zone_help') }}</p>
                 </section>
                 <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
                     <h2 class="text-lg font-semibold">{{ trans('theme::general.identity_section') }}</h2>
                     <label class="grid gap-1">
                         <span>{{ trans('theme::general.brand_name') }}</span>
                         <input name="brand_name" class="border rounded-md p-2" maxlength="80" value="{{ old('brand_name', $options['brand_name']) }}">
+                    </label>
+                    <label class="grid gap-1 max-w-xs">
+                        <span>{{ trans('theme::general.login_background_opacity') }}</span>
+                        <input type="number" min="0" max="100" name="background_opacity" class="border rounded-md p-2"
+                            value="{{ old('background_opacity', $options['background_opacity']) }}">
                     </label>
                     <div class="grid md:grid-cols-2 gap-4">
                         @foreach (['logo' => trans('theme::general.logo'), 'favicon' => trans('theme::general.favicon'), 'login_background' => trans('theme::general.login_background')] as $key => $label)
@@ -52,6 +63,20 @@
                             </article>
                         @endforeach
                     </div>
+                </section>
+                <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
+                    <h2 class="text-lg font-semibold">{{ trans('theme::general.footer_section') }}</h2>
+                    <p class="text-sm text-gray-500">{{ trans('theme::general.footer_preserve_credit') }}</p>
+                    <label class="grid gap-1">
+                        <span>{{ trans('theme::general.footer_text_label') }}</span>
+                        <input type="text" name="footer_text" maxlength="180"
+                            class="border rounded-md p-2" value="{{ old('footer_text', $options['footer_text']) }}">
+                    </label>
+                    <label class="grid gap-1">
+                        <span>{{ trans('theme::general.footer_url_label') }}</span>
+                        <input type="url" name="footer_url" maxlength="400"
+                            class="border rounded-md p-2" value="{{ old('footer_url', $options['footer_url']) }}" placeholder="https://example.org">
+                    </label>
                 </section>
                 <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
                     <h2 class="text-lg font-semibold">{{ trans('theme::general.carousel_title') }}</h2>

@@ -165,6 +165,10 @@
                     <label class="grid gap-1"><span>{{ trans('theme::general.footer_credit') }}</span>
                         <input name="footer_credit" maxlength="160" class="border rounded-md p-2" value="{{ old('footer_credit', $options['footer_credit']) }}" placeholder="{{ trans('theme::general.footer_placeholder') }}">
                     </label>
+                    <label class="grid gap-1"><span>{{ trans('theme::general.footer_url_label') }}</span>
+                        <input type="url" name="footer_url" maxlength="400" pattern="https://.*" class="border rounded-md p-2"
+                            value="{{ old('footer_url', $options['footer_url']) }}">
+                    </label>
                 </section>
                 @can('update-settings-company')
                     <button class="bg-purple text-white rounded-md px-6 py-3 justify-self-start" type="submit">{{ trans('theme::general.save') }}</button>

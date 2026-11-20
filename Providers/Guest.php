@@ -37,6 +37,18 @@ final class Guest extends ServiceProvider
 
         app('router')->pushMiddlewareToGroup('web', HostContext::class);
 
+        // Preserve upstream Akaunting attribution; this appends an additional,
+        // administrator-configurable support/development credit below it.
+        View::composer('components.layouts.auth.footer', static function ($view): void {
+            $options = LoginAppearance::forHost(request()->getHost());
+            if ($options === null || trim((string) ($options['footer_text'] ?? '')) === '') {
+                return;
+            }
+            $view->getFactory()->startPush('footer_end', view('theme::components.public-footer', [
+                'options' => $options,
+            ])->render());
+        });
+
         View::composer('components.layouts.auth.head', static function ($view): void {
             $options = LoginAppearance::forHost(request()->getHost());
             if ($options === null) {
