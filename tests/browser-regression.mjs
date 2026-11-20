@@ -222,10 +222,30 @@ try {
         '--disable-dev-shm-usage', '--allow-file-access-from-files',
         '--remote-allow-origins=*', '--remote-debugging-port=0',
         '--user-data-dir=' + join(tmp, 'profile'), 'about:blank',
-    ], {stdio: 'ignore'});
+    ], {stdio: ['ignore', 'ignore', 'pipe']});
 
-    const port = await poll(() => existsSync(join(tmp, 'profile/DevToolsActivePort'))
-        ? Number(readFileSync(join(tmp, 'profile/DevToolsActivePort'), 'utf8').split('\n')[0]) : null);
+    // Wait for the actual Chrome DevTools endpoint, rather than a fixed delay.
+    // Report startup stderr/exit status when shared CI runners cannot launch.
+    let startupStderr = '';
+    let startupError = '';
+    chrome.stderr.on('data', data => {
+        startupStderr = (startupStderr + data.toString()).slice(-3000);
+    });
+    chrome.on('error', error => { startupError = error.message; });
+    let port;
+    try {
+        port = await poll(() => {
+            if (startupError || chrome.exitCode !== null || chrome.signalCode !== null) return -1;
+            return existsSync(join(tmp, 'profile/DevToolsActivePort'))
+                ? Number(readFileSync(join(tmp, 'profile/DevToolsActivePort'), 'utf8').trim().split(/\s+/)[0])
+                : null;
+        }, 30000);
+        if (port < 1) throw Error('Chrome process exited before DevTools was available');
+    } catch (error) {
+        throw Error('Chrome DevTools initialization failed: ' + error.message
+            + ' exit=' + chrome.exitCode + ' signal=' + chrome.signalCode
+            + ' spawn=' + startupError + ' stderr=' + startupStderr.trim());
+    }
     const pages = await poll(async () => {
         const res = await fetch(`http://127.0.0.1:${port}/json`);
         return res.ok ? await res.json() : null;
