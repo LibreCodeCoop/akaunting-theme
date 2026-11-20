@@ -36,6 +36,15 @@ test('carousel uses safe DOM primitives and preserves native Akaunting slides as
     assert.match(login, /#app \{/);
     assert.match(login, /background-image: url/);
 });
+test('login slides use only installed Swiper APIs, preserving looping and autoplay', () => {
+    assert.doesNotMatch(login, /swiper\.removeAllSlides\(/);
+    assert.doesNotMatch(login, /swiper\.appendSlide\(/);
+    assert.match(login, /swiper\.loopDestroy\(\)/);
+    assert.match(login, /wrapper\.replaceChildren\(\.\.\.nodes\)/);
+    assert.match(login, /swiper\.loopCreate\(\)/);
+    assert.match(login, /swiper\.update\(\)/);
+    assert.match(login, /swiper\.autoplay\?\.start\?\.\(\)/);
+});
 test('domain registry verifies DNS and TLS, status is pending until checks pass', () => {
     const registry = read('Domain/DomainRegistry.php');
     const domains = read('Http/Controllers/DomainController.php');

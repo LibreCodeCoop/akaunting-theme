@@ -119,11 +119,26 @@
         });
 
         if (container.swiper) {
+            // Akaunting registers Navigation/Pagination/Autoplay, but NOT the
+            // optional Swiper Manipulation plugin. removeAllSlides and
+            // appendSlide are therefore undefined in the real Core bundle.
+            // Rebuild the slide nodes without optional Swiper extensions.
             const swiper = container.swiper;
-            swiper.removeAllSlides();
-            nodes.forEach(function (node) { swiper.appendSlide(node.outerHTML); });
-            swiper.slideTo(0, 0);
+            swiper.autoplay?.stop?.();
+            if (swiper.params?.loop && typeof swiper.loopDestroy === 'function') {
+                swiper.loopDestroy();
+            }
+            wrapper.replaceChildren(...nodes);
+            if (swiper.params?.loop && typeof swiper.loopCreate === 'function') {
+                swiper.loopCreate();
+            }
             swiper.update();
+            if (typeof swiper.slideToLoop === 'function') {
+                swiper.slideToLoop(0, 0);
+            } else {
+                swiper.slideTo(0, 0);
+            }
+            swiper.autoplay?.start?.();
         } else {
             wrapper.replaceChildren(...nodes);
         }
