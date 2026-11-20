@@ -49,6 +49,16 @@ final class LoginAppearance
         ]], ['id'], ['options', 'updated_at']);
     }
 
+    public static function allowedViewer(): bool
+    {
+        $user = auth()->user();
+
+        // This is public branding, not a secret. Company-settings readers
+        // may inspect the instance defaults without permission to edit them.
+        return (bool) ($user && ($user->can('read-settings-company')
+            || self::allowedEditor()));
+    }
+
     public static function allowedEditor(): bool
     {
         $user = auth()->user();

@@ -85,9 +85,15 @@
                     </article>
                 </section>
                 <section class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 grid gap-4">
-                    <div>
+                    <div class="grid gap-2">
                         <h2 class="text-lg font-semibold">{{ trans('theme::general.login_section') }}</h2>
                         <p class="text-sm text-gray-500">{{ trans('theme::general.login_help') }}</p>
+                        <p class="text-sm text-gray-500">{{ trans('theme::general.company_login_scope_note') }}</p>
+                        @if (\Modules\Theme\Domain\LoginAppearance::allowedViewer())
+                            <a class="text-purple underline text-sm" href="{{ route('theme.login.global.index') }}">
+                                {{ trans('theme::general.global_login_open') }}
+                            </a>
+                        @endif
                     </div>
                     <article class="border border-gray-200 rounded-lg p-4 grid gap-3">
                         <h3 class="font-semibold">{{ trans('theme::general.login_background') }}</h3>

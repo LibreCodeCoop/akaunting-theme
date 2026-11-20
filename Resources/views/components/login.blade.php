@@ -96,7 +96,7 @@
     #app::before { opacity: {{ max(0, min(100, (int) ($options['background_opacity'] ?? 10))) / 160 }}; }
 }
 @endif
-@if (! $options['login_slider'])
+@if (! $options['login_slider'] || $slides === [])
 #app .swiper { display: none !important; }
 @endif
 </style>

@@ -12,14 +12,21 @@ use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 use Modules\Theme\Domain\DomainRegistry;
 use Modules\Theme\Domain\LoginAppearance;
+use Modules\Theme\Domain\LoginSlides;
 
 final class LoginSettingsController extends Controller
 {
     public function index(): View
     {
-        abort_unless(LoginAppearance::allowedEditor(), 403);
+        abort_unless(LoginAppearance::allowedViewer(), 403);
 
-        return view('theme::global-login', ['options' => LoginAppearance::options()]);
+        $options = LoginAppearance::options();
+        $options['slides'] = array_values($options['slides']);
+
+        return view('theme::global-login', [
+            'options' => $options,
+            'canEdit' => LoginAppearance::allowedEditor(),
+        ]);
     }
 
     public function save(Request $request): RedirectResponse
@@ -40,10 +47,14 @@ final class LoginSettingsController extends Controller
             'remove_logo' => 'sometimes|boolean',
             'remove_favicon' => 'sometimes|boolean',
             'remove_login_background' => 'sometimes|boolean',
-            'slide_title' => 'nullable|array|max:6',
+            'slide_title' => 'nullable|array|max:100',
             'slide_title.*' => 'nullable|string|max:120',
-            'slide_caption' => 'nullable|array|max:6',
+            'slide_caption' => 'nullable|array|max:100',
             'slide_caption.*' => 'nullable|string|max:280',
+            'delete_slide' => 'nullable|array|max:100',
+            'delete_slide.*' => 'nullable|boolean',
+            'slide_image' => 'nullable|array|max:100',
+            'slide_image.*' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
         ]);
         $baseHost = DomainRegistry::normalize($data['base_host']);
         $aliasZone = DomainRegistry::normalize((string) ($data['alias_zone'] ?? ''));
@@ -84,6 +95,24 @@ final class LoginSettingsController extends Controller
             'login_slider' => $request->boolean('login_slider'),
             'background_opacity' => (int) ($data['background_opacity'] ?? $current['background_opacity']),
         ];
+        // Reconcile with the persisted slides before writing any uploaded
+        // files, so an invalid entry cannot silently delete a saved slide.
+        $previous = array_values($current['slides']);
+        $uploads = $request->file('slide_image', []);
+        try {
+            $slides = LoginSlides::reconcile(
+                $previous,
+                $data['slide_title'] ?? [],
+                $data['slide_caption'] ?? [],
+                $data['delete_slide'] ?? [],
+                $uploads,
+            );
+        } catch (\InvalidArgumentException $error) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'slide_title' => trans('theme::general.slides_validation_error'),
+            ]);
+        }
+
         foreach (['logo', 'favicon', 'login_background'] as $name) {
             if ($request->hasFile($name)) {
                 $changes[$name] = $request->file($name)->store('akaunting-theme/global', 'public');
@@ -92,28 +121,22 @@ final class LoginSettingsController extends Controller
             }
         }
 
-        $previous = $current['slides'];
-        $slides = [];
-        for ($i = 0; $i < 6; $i++) {
-            $title = trim((string) ($data['slide_title'][$i] ?? ''));
-            $caption = trim((string) ($data['slide_caption'][$i] ?? ''));
-            $image = $previous[$i]['image'] ?? '';
-            $file = 'slide_image_' . $i;
-
-            $request->validate([
-                $file => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
-                'remove_slide_' . $i => 'sometimes|boolean',
-            ]);
-            if ($request->hasFile($file)) {
-                $image = $request->file($file)->store('akaunting-theme/global/slides', 'public');
-            } elseif ($request->boolean('remove_slide_' . $i)) {
-                $image = '';
+        foreach ($slides as &$slide) {
+            if (! isset($slide['upload_index'])) {
+                continue;
             }
-            if ($title !== '' && $image !== '') {
-                $slides[$i] = ['title' => $title, 'caption' => $caption, 'image' => $image];
+            $index = $slide['upload_index'];
+            $storedPath = $uploads[$index]->store('akaunting-theme/global/slides', 'public');
+            if (! is_string($storedPath) || $storedPath === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'slide_image.' . $index => trans('theme::general.slides_validation_error'),
+                ]);
             }
+            $slide['image'] = $storedPath;
+            unset($slide['upload_index']);
         }
-        $changes['slides'] = $slides;
+        unset($slide);
+        $changes['slides'] = array_values($slides);
         LoginAppearance::update($changes);
 
         return redirect()->route('theme.login.global.index')

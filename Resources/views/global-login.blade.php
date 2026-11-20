@@ -15,8 +15,14 @@
                     <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                 </div>
             @endif
+            @unless ($canEdit)
+                <p role="note" class="border border-gray-200 rounded-md p-4 text-sm">
+                    {{ trans('theme::general.global_login_readonly') }}
+                </p>
+            @endunless
             <form method="POST" enctype="multipart/form-data" action="{{ route('theme.login.global.save') }}" class="grid gap-5">
                 @csrf
+                <fieldset class="grid gap-5 min-w-0" @disabled(!$canEdit)>
                 <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
                     <h2 class="text-lg font-semibold">{{ trans('theme::general.global_host_title') }}</h2>
                     <label class="grid gap-1">
@@ -85,39 +91,14 @@
                         <input type="checkbox" name="login_slider" value="1" @checked(old('login_slider', $options['login_slider']))>
                         <span>{{ trans('theme::general.login_slider') }}</span>
                     </label>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        @for ($i = 0; $i < 6; $i++)
-                        <article class="grid gap-2 rounded-lg border border-gray-200 p-4">
-                            <h3 class="font-semibold">{{ trans('theme::general.carousel_slide') }} {{ $i + 1 }}</h3>
-                            @if (! empty($options['slides'][$i]['image']))
-                                <img src="{{ asset('public/storage/' . $options['slides'][$i]['image']) }}"
-                                    alt="{{ $options['slides'][$i]['title'] ?? '' }}"
-                                    class="w-full h-28 object-contain bg-gray-100 rounded-md" loading="lazy">
-                                <label class="text-sm flex items-center gap-2">
-                                    <input type="checkbox" name="remove_slide_{{ $i }}" value="1">
-                                    <span>{{ trans('theme::general.remove_image') }}</span>
-                                </label>
-                            @endif
-                            <label class="grid gap-1 text-sm">
-                                <span>{{ trans('theme::general.slide_title') }}</span>
-                                <input type="text" maxlength="120" name="slide_title[{{ $i }}]"
-                                    value="{{ old('slide_title.' . $i, $options['slides'][$i]['title'] ?? '') }}"
-                                    class="border rounded-md p-2">
-                            </label>
-                            <label class="grid gap-1 text-sm">
-                                <span>{{ trans('theme::general.slide_caption') }}</span>
-                                <textarea maxlength="280" name="slide_caption[{{ $i }}]"
-                                    class="border rounded-md p-2">{{ old('slide_caption.' . $i, $options['slides'][$i]['caption'] ?? '') }}</textarea>
-                            </label>
-                            <label class="grid gap-1 text-sm">
-                                <span>{{ trans('theme::general.replace_image') }}</span>
-                                <input type="file" accept="image/png,image/jpeg,image/webp" name="slide_image_{{ $i }}">
-                            </label>
-                        </article>
-                        @endfor
-                    </div>
+                    @include('theme::components.global-slide-editor')
                 </section>
-                <button type="submit" class="bg-purple text-white rounded-md px-5 py-3 justify-self-start">{{ trans('theme::general.save') }}</button>
+                </fieldset>
+                @if ($canEdit)
+                    <button type="submit" class="bg-purple text-white rounded-md px-5 py-3 justify-self-start">
+                        {{ trans('theme::general.save') }}
+                    </button>
+                @endif
             </form>
         </div>
     </x-slot>
