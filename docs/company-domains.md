@@ -55,3 +55,31 @@ the previous module version and removal of the activation flag.
 
 This is company-aware routing and public login branding, not a new identity
 provider or a separate per-company database.
+
+## Early public-login provider (deployment integration)
+
+Akaunting loads company modules only after identifying a company. Its public
+login has no such context. A separate lightweight Laravel provider in the
+Theme module is therefore required for anonymous login and the public handoff
+endpoint. It is declared in the Theme package's composer.json for installations
+using normal Composer package discovery.
+
+For the existing Akaunting module-directory installation, **without editing
+the Akaunting PHP source or root composer manifests**, register the Theme's
+public provider in Laravel's generated package manifest:
+
+    php modules/Theme/scripts/register_guest_provider.php /var/www/html install
+    php modules/Theme/scripts/register_guest_provider.php /var/www/html verify
+
+The script is idempotent, touches only bootstrap/cache/packages.php and
+preserves existing packages. If Composer package discovery regenerates this
+cache, re-run the install command as a deployment step. To reverse it:
+
+    php modules/Theme/scripts/register_guest_provider.php /var/www/html remove
+
+An installation using normal Composer path-package discovery does not need
+the generated-manifest fallback because the package advertises the provider.
+
+This bootstrap enables public branding and the handoff endpoint. The
+authenticated domain *enforcement* remains independently controlled by
+AKAUNTING_THEME_DOMAIN_ROUTING_ENABLED (disabled by default).

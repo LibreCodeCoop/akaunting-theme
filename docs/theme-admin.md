@@ -42,3 +42,15 @@ This module does not create new account credentials or company membership.
 Compile Blade and then lint the generated PHP. A successful Blade cache
 alone does not prove the page has valid PHP. Check file previews and
 contrast in both appearance modes; verify real domain behavior separately.
+
+## Public login provider
+
+Akaunting's normal module provider is loaded in authenticated company routes.
+A separate early provider (Modules\Theme\Providers\Guest) must be
+registered through Laravel package discovery for public login and browser
+company-domain routing. This provider does not register company admin routes.
+Its PHP source lives in the independent module.
+
+For installations using a module directory instead of Composer's usual package
+require flow, use the module's provider registration script described in
+company-domains.md. Reapply after framework/composer package discovery runs.
