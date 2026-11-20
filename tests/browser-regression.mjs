@@ -86,6 +86,20 @@ const fixture = (mode) => `<!doctype html>
            class="w-5 h-5 object-cover block">
     </div>
   </section>
+  <!-- Source shape from AkauntingSearch.vue: selected filter chips are
+       colored, but the adjacent search input declares bg-transparent. -->
+  <section id="native-search-row" class="search-field js-search flex lg:flex-row border-b border-gray-300">
+    <div class="tags-group group items-center" style="display:contents">
+      <span id="search-filter-chip-option" class="flex items-center bg-purple-lighter text-black border-0 el-tag el-tag--small el-tag-option">Tipo</span>
+      <span id="search-filter-chip-operator" class="flex items-center bg-purple-lighter text-black el-tag el-tag--small el-tag-operator">=</span>
+      <span id="search-filter-chip-value" class="flex items-center bg-purple-lighter text-black el-tag el-tag--small el-tag-value">Receita</span>
+    </div>
+    <div class="relative w-full h-full flex" id="search-filter-input-wrapper">
+      <input id="native-search-filter-input" type="text"
+             class="w-full h-12 lg:h-auto bg-transparent text-black text-sm border-0 pb-0 focus:outline-none focus:ring-transparent focus:border-purple-100"
+             placeholder="Selecione uma das opções abaixo">
+    </div>
+  </section>
   <div class="el-select"><div class="el-input">
      <input class="el-input__inner" id="element-input" value="Selecionar">
   </div></div>
@@ -270,6 +284,21 @@ try {
         await call('Page.navigate', {url: pathToFileURL(join(tmp, mode + '.html')).href});
         await poll(async () => await evaluate('document.readyState==="complete"'));
         const dark = mode === 'dark';
+        // The Core search field explicitly requests bg-transparent. Global
+        // Theme input rules must not turn it into a full-width opaque bar.
+        const searchInput = await style('#native-search-filter-input');
+        assert.equal(searchInput.backgroundColor, 'rgba(0, 0, 0, 0)',
+            'AkauntingSearch input must keep bg-transparent on the page surface');
+        const chipSurface = await style('#search-filter-chip-value');
+        const chipText = await style('#search-filter-chip-option');
+        checkReadable(mode + ' selected search-filter chip', {
+            ...chipText, backgroundColor: chipSurface.backgroundColor,
+        });
+        if (dark) {
+            const controlInput = await style('#element-input');
+            assert.equal(controlInput.backgroundColor, 'rgb(31, 41, 55)',
+                'Normal form inputs must retain their opaque dark surface');
+        }
         // Both the operator chooser and its selected-filter chip load the
         // same fixed-color SVG. Test the actual rendered icon color by drawing
         // the image with its computed CSS filter into an isolated canvas.

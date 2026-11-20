@@ -49,3 +49,12 @@ test('fixed dark not-equal SVG is recolored only within dark-mode search filters
     assert.ok(css.includes(expected), 'Missing scoped rule for the fixed-color SVG operator');
     assert.ok(css.slice(css.indexOf(expected)).includes('filter: brightness(0) invert(1) !important;'));
 });
+
+test('inline search keeps native transparency while ordinary dark inputs remain opaque', () => {
+    assert.match(css, /html\.lcc-theme-dark \.js-search input\.bg-transparent \{/);
+    const start = css.indexOf('html.lcc-theme-dark .js-search input.bg-transparent {');
+    assert.ok(start >= 0);
+    assert.ok(css.slice(start, css.indexOf('}', start)).includes('background-color: transparent !important;'));
+    assert.ok(css.includes('background-color: var(--lcc-dark-surface) !important;'),
+        'Normal inputs must keep their raised dark surface');
+});

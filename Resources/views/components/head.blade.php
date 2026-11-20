@@ -318,6 +318,15 @@ html.lcc-theme-dark :is(input:not([type="checkbox"]):not([type="radio"]), textar
     background-color: var(--lcc-dark-surface) !important;
     border-color: var(--lcc-dark-border) !important;
 }
+/* AkauntingSearch and SearchString deliberately use bg-transparent on their
+ * inline search input, adjacent to separate filter chips. Broad dark-mode
+ * input overrides above otherwise paint a full-width opaque rectangle behind
+ * the prompt and create a visible seam next to the chips. Preserve that native
+ * transparent surface, without affecting ordinary opaque form inputs. */
+html.lcc-theme-dark .js-search input.bg-transparent {
+    background-color: transparent !important;
+}
+
 html.lcc-theme-dark :is(input,textarea)::placeholder {
     color: #cbd5e1 !important;
 }

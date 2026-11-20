@@ -1,7 +1,7 @@
 {
   "alias": "theme",
   "icon": "palette",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "active": 1,
   "providers": ["Modules\\Theme\\Providers\\Main"],
   "aliases": {},
