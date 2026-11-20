@@ -55,3 +55,18 @@ The theme never modifies PDFs, invoices, DANFSe, NFS-e, customer emails or origi
 ## License
 
 AGPL-3.0-or-later for the original module code. This does not relicense Akaunting Core or any third-party assets.
+
+
+## Administration and company domains
+
+- Company themes: explicit company context, saved image previews and
+  unlink/replacement controls. No second CRUD of Akaunting companies.
+- Instance login: separate privileged configuration of canonical hostname,
+  logo/favicon/background, carousel and up to six slides.
+- Company domains: DNS TXT and HTTPS-verified aliases with a primary choice;
+  company login settings become usable only after verification.
+- Session handoff: optional, off by default, bound to one verified host,
+  one company and a short-lived single-use code. No shared domain cookies.
+
+Read docs/theme-admin.md and docs/company-domains.md before activating
+company domain routing in a live installation.

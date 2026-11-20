@@ -31,8 +31,8 @@ test('Animated company spinner is configurable, GIF validated and resettable', (
     assert.match(defaults, /'loading_spinner'\s*=>\s*''/);
     assert.match(controller, /'loading_spinner'\s*=>\s*.*mimes:gif/);
     assert.match(controller, /'remove_loading_spinner'/);
-    assert.match(settings, /'loading_spinner'\s*=>\s*trans\('theme::general.loading_spinner'\)/);
-    assert.match(settings, /name="{{ \$key }}"/);
+    assert.match(settings, /name="loading_spinner"/);
+
     assert.match(settings, /name="remove_loading_spinner"/);
 });
 
