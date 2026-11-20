@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: PHP syntax
         run: |
-          docker run --rm -v "$PWD:/app:ro" php:8.3-cli sh -c 'set -e; find /app -name "*.php" -exec php -l {} \; >/dev/null; php /app/tests/appearance-contract.php; php /app/tests/host-domain-contract.php; php /app/tests/login-host-contract.php'
+          docker run --rm -v "$PWD:/app:ro" php:8.3-cli sh -c 'set -e; find /app -name "*.php" -exec php -l {} \; >/dev/null; php /app/tests/appearance-contract.php; php /app/tests/host-domain-contract.php; php /app/tests/login-host-contract.php; php /app/tests/login-slides-contract.php'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -22,3 +22,4 @@ jobs:
         run: |
           command -v google-chrome
           node tests/browser-regression.mjs
+          node tests/browser-login-editor.mjs

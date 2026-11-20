@@ -85,3 +85,10 @@ sibling aliases (for example, accounting.example.org beside
 akaunting.example.org); no suffix is inferred automatically. Registration is
 pending until DNS TXT, HTTPS and a server-specific origin proof all pass.
 Cross-origin authenticated session handoff remains disabled by default.
+
+The instance login editor displays the saved slide thumbnails and supports
+adding, removing, undoing deletion, and uploading replacements for up to six
+slides. Removing all custom slides hides the public carousel instead of
+restoring the unrelated Core carousel. The global login is viewable (read-only)
+by company-settings readers; instance-wide edits still require privileged
+company-management permission checks.

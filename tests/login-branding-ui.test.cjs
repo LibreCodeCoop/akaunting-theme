@@ -26,8 +26,9 @@ test('company-only login customization is behind an active verified domain', () 
     assert.match(read('Http/Controllers/ThemeController.php'), /DomainRegistry::primaryForCompany/);
     assert.match(read('Http/Controllers/ThemeController.php'), /abort\(422, trans\('theme::general.login_locked_until_verified'\)\)/);
 });
-test('carousel uses safe DOM primitives and preserves native Akaunting slides as fallback', () => {
-    assert.match(defaults, /@for \(\$i = 0; \$i < 6; \$i\+\+\)/);
+test('carousel uses safe DOM primitives and hides native slides when empty', () => {
+    assert.match(defaults, /global-slide-editor/);
+    assert.match(read('Resources/views/components/global-slide-editor.blade.php'), /data-slide-add/);
     assert.match(login, /if \(!slides.length\) return;/);
     assert.match(login, /document\.createElement\('img'\)/);
     assert.match(login, /title\.textContent = slide\.title/);
@@ -99,4 +100,29 @@ test('transparent uploaded login logo does not sit on an opaque white content co
         /#app\s*>\s*\.relative\s*>\s*\.w-full\s*\{[^}]*background-color\s*:/s);
     assert.match(login, /original\.src\s*=\s*logo/);
     assert.match(login, /object-fit:contain/);
+});
+
+test('company theme readers can inspect but not mutate instance login settings', () => {
+    const roles = read('Domain/LoginAppearance.php');
+    assert.match(roles, /function allowedViewer/);
+    assert.match(controller, /abort_unless\(LoginAppearance::allowedViewer\(\), 403\)/);
+    assert.match(controller, /abort_unless\(LoginAppearance::allowedEditor\(\), 403\)/);
+    assert.match(defaults, /@disabled\(!\$canEdit\)/);
+    assert.match(company, /theme\.login\.global\.index/);
+});
+test('saved login slides have thumbnails and explicit add remove undo controls', () => {
+    const slides = read('Resources/views/components/global-slide-editor.blade.php');
+    for (const key of ['data-slide-saved','data-slide-add','data-slide-remove',
+         'data-slide-undo','data-slide-delete-flag','data-slide-template']) {
+        assert.ok(slides.includes(key), 'Missing editor control '+key);
+    }
+    assert.match(slides,/slide_image\[__INDEX__\]/);
+    assert.match(slides,/asset\('public\/storage\/'/);
+    assert.doesNotMatch(slides,/@for \(\$i = 0; \$i < 6/);
+});
+
+test('invalid slide metadata is rejected before storing any new branding assets', () => {
+    const plan = controller.indexOf('LoginSlides::reconcile(');
+    const brandingUpload = controller.indexOf("foreach (['logo', 'favicon', 'login_background'] as $name)");
+    assert.ok(plan > 0 && brandingUpload > plan, 'Uploads must follow slide metadata validation');
 });
