@@ -345,6 +345,36 @@ html.lcc-theme-dark [role="tooltip"] [data-popper-arrow]::before {
     border-color: var(--lcc-dark-border) !important;
 }
 
+/* Core's index-actions tooltips do not have role="tooltip"; they use
+   data-tooltip-placement and therefore escaped the earlier arrow override.
+   Align each rotated arrow to its own popup, including the company rail. */
+html.lcc-theme-dark [data-tooltip-placement]:not([data-tooltip-target]),
+html.lcc-theme-dark #tooltip-profile {
+    background-color: var(--lcc-dark-surface) !important;
+    color: var(--lcc-dark-text) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark :where([role="tooltip"], [data-tooltip-placement])
+    [data-popper-arrow]::before,
+html.lcc-theme-dark #tooltip-profile [data-popper-arrow]::before {
+    background-color: var(--lcc-dark-surface) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+html.lcc-theme-dark .information-content {
+    background-color: var(--lcc-dark-elevated) !important;
+}
+html.lcc-theme-dark .information-content [data-popper-arrow]::before {
+    background-color: var(--lcc-dark-elevated) !important;
+    border-color: var(--lcc-dark-border) !important;
+}
+/* Native Core tables are flex layouts. The Core td:hover palette differed
+   from the row hover palette, leaving opaque rectangles over a hovered row. */
+html.lcc-theme-dark table.flex.flex-col tbody tr:is(:hover, :focus-within) > :is(td, th),
+html.lcc-theme-dark table.flex.flex-col tbody tr:is(:hover, :focus-within) > :is(td, th).bg-white,
+html.lcc-theme-dark table.flex.flex-col tbody tr:is(:hover, :focus-within) > :is(td, th).bg-gray-100 {
+    background-color: var(--lcc-dark-hover) !important;
+}
+
 /* ApexCharts renders its own HTML tooltip and SVG labels with light defaults.
    Override only presentation; never change financial data or series colors. */
 html.lcc-theme-dark .apexcharts-tooltip,

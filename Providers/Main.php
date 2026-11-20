@@ -47,7 +47,7 @@ final class Main extends ServiceProvider
                     'search_keywords' => trans('theme::general.description'),
                 ]);
             }
-            if (auth()->user()->can('read-settings-company')) {
+            if (auth()->check() && auth()->user()->can('read-settings-company')) {
                 $event->menu->route('theme.domains.index', trans('theme::general.domains_title'), [], 193, [
                     'icon' => 'domain',
                 ]);

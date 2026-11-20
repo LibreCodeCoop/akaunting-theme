@@ -22,7 +22,11 @@ final class ThemeController extends Controller
         abort_unless(auth()->user()?->can('read-settings-company'), 403);
 
         // The native Akaunting companies are the source of truth. No second CRUD.
-        $companies = auth()->user()->companies()->enabled()->orderBy('companies.name')->get();
+        // Akaunting stores a company's name in the settings table, not in
+        // companies.name. The model hydrates the name on retrieval.
+        $companies = auth()->user()->companies()->enabled()->get()
+            ->sortBy(static fn (Company $item): string => mb_strtolower((string) $item->name, 'UTF-8'))
+            ->values();
         if ($companies->count() === 1) {
             return redirect()->route('theme.settings.index', ['company_id' => $companies->first()->id]);
         }
@@ -61,6 +65,7 @@ final class ThemeController extends Controller
             'support_url' => 'nullable|url|starts_with:https://|max:400',
             'documentation_url' => 'nullable|url|starts_with:https://|max:400',
             'footer_credit' => 'nullable|string|max:160',
+            'footer_url' => 'nullable|url|starts_with:https://|max:400',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:512',
             'login_background' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
@@ -74,7 +79,7 @@ final class ThemeController extends Controller
         $companyId = (int) company_id();
         $options = array_intersect_key($values, array_flip([
             'brand_name', 'sidebar_color', 'menu_color', 'content_color',
-            'support_url', 'documentation_url', 'footer_credit',
+            'support_url', 'documentation_url', 'footer_credit', 'footer_url',
         ]));
         // The public-login editor is unlocked only after domain verification.
         $hasActiveDomain = DomainRegistry::primaryForCompany($companyId) !== null;

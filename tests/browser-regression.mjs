@@ -55,7 +55,7 @@ const fixture = (mode) => `<!doctype html>
   <thead><tr><th class="text-black">Nome</th></tr></thead>
   <tbody data-table-body="true">
     <tr id="dashboard-row" data-table-list class="relative flex items-center px-1 group border-b hover:bg-gray-100">
-      <td id="dashboard-name" class="py-4 text-sm text-black">RH</td>
+      <td id="dashboard-name" class="py-4 text-sm text-black bg-white">RH</td>
       <td><span id="user-badge" class="bg-lilac-900 px-3 py-1 text-sm rounded-lg text-black">Usuário de teste</span></td>
       <td><button id="table-action" type="button" class="bg-white hover:bg-gray-100">Editar</button></td>
     </tr>
@@ -94,6 +94,17 @@ const fixture = (mode) => `<!doctype html>
     <span id="tooltip-search-label">Pesquisar</span>
     <div id="tooltip-search-arrow" data-popper-arrow
       class="absolute w-2 h-2 before:absolute before:w-2 before:h-2 before:bg-white before:border-gray-200 before:transform before:rotate-45 before:border -left-1 before:border-t-0 before:border-r-0"></div>
+  </div>
+  <!-- Core action tooltips do not carry role=tooltip; regression for white squares. -->
+  <div id="action-hint" data-tooltip-placement="top" class="bg-white border border-gray-200">
+    <span>Visualizar</span>
+    <div id="action-hint-arrow" data-popper-arrow
+      class="absolute w-2 h-2 before:absolute before:w-2 before:h-2 before:bg-white before:border-gray-200 before:transform before:rotate-45 before:border"></div>
+  </div>
+  <div id="document-info-tip" role="tooltip" class="information-content bg-lilac-900">
+    <span>Detalhes da transação</span>
+    <div id="document-info-arrow" data-popper-arrow
+      class="w-2 h-2 before:absolute before:w-2 before:h-2 before:bg-lilac-900 before:transform before:rotate-45"></div>
   </div>
   <div id="cashflow-chart" class="apexcharts-canvas">
     <span id="chart-legend" class="apexcharts-legend-text" style="color: #424242;">Entrada</span>
@@ -275,6 +286,26 @@ try {
             const hoveredRow = await hover('#dashboard-row');
             checkReadable('hovered dashboard name', {...await style('#dashboard-name'), backgroundColor: hoveredRow.backgroundColor});
             assert.equal(hoveredRow.backgroundColor, 'rgb(51, 65, 85)', 'Dashboard row hover must use dark elevated surface');
+            // A hovered transaction row must not contain opaque cells of a
+            // different shade: the screenshots show rectangular patches.
+            const rowNode = (await call('DOM.getDocument', {depth: -1})).root.nodeId;
+            const hoverNode = (await call('DOM.querySelector', {nodeId: rowNode, selector: '#dashboard-row'})).nodeId;
+            await call('CSS.forcePseudoState', {nodeId:hoverNode,forcedPseudoClasses:['hover']});
+            const hoveredCell = await style('#dashboard-name');
+            const targetRow = await style('#dashboard-row');
+            assert.equal(hoveredCell.backgroundColor, targetRow.backgroundColor,
+                'Native table row has a separate rectangular cell background');
+            await call('CSS.forcePseudoState', {nodeId:hoverNode,forcedPseudoClasses:[]});
+            // Core table/actions and information popovers have distinct arrows.
+            for (const [tip, arrow] of [
+                ['#action-hint','#action-hint-arrow'],
+                ['#document-info-tip','#document-info-arrow'],
+            ]) {
+                const bubble = await style(tip);
+                const pseudo = await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(arrow)}),'::before').backgroundColor`);
+                assert.equal(pseudo,bubble.backgroundColor,
+                    'Tooltip arrow remains a light square: '+arrow);
+            }
             const menuHover = await hover('#dropdown-item');
             checkReadable('dropdown hover', menuHover);
             const tableHover = await hover('#table-action');
