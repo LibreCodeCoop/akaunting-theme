@@ -33,5 +33,6 @@
 .hover\:bg-purple:hover { background-color:#55588b; }
 .hover\:bg-lilac-100:hover { background-color:#f5f7fa; }
 input { color:#424242; background-color:white; }
+.bg-transparent { background-color:transparent; }
 .el-input__inner { color:#595959 !important; background-color:white; }
 .el-table--enable-row-hover .el-table__body tr:hover > td { background-color:#f5f7fa; }
