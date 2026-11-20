@@ -42,3 +42,10 @@ test('dark palette overrides Akaunting dark purple labels and Element UI select 
         assert.ok(css.includes('html.lcc-theme-dark ' + target), 'Missing dark-mode override for ' + target);
     }
 });
+
+
+test('fixed dark not-equal SVG is recolored only within dark-mode search filters', () => {
+    const expected = 'html.lcc-theme-dark .js-search img[src*="/public/img/tailwind_icons/not-equal.svg"]';
+    assert.ok(css.includes(expected), 'Missing scoped rule for the fixed-color SVG operator');
+    assert.ok(css.slice(css.indexOf(expected)).includes('filter: brightness(0) invert(1) !important;'));
+});

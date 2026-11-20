@@ -68,6 +68,24 @@ const fixture = (mode) => `<!doctype html>
   <div class="dropdown-menu bg-white" id="dropdown">
    <a href="#" class="hover:bg-lilac-100 text-purple" id="dropdown-item">Item</a>
   </div>
+  <!-- Source shapes mirror AkauntingSearch.vue, SearchString/Filters.vue and
+       SearchString/FilteredList.vue. The not-equal operator is an <img> with
+       an opaque #242424 SVG fill, not a font glyph like the equal operator. -->
+  <section class="search-field js-search" id="filter-search-surface">
+    <div class="dropdown-menu operator bg-white show" id="filter-operator-popup" style="display:block">
+      <li><button type="button" class="w-full h-full flex items-center rounded-md px-2 hover:bg-lilac-100">
+        <span id="filter-operator-equal" class="material-icons">drag_handle</span>
+      </button></li>
+      <li><button id="filter-operator-button" type="button" class="w-full h-full flex items-center rounded-md px-2 hover:bg-lilac-100">
+        <img id="filter-operator-not-equal" src="./public/img/tailwind_icons/not-equal.svg"
+             class="w-6 h-6 block m-auto pointer-events-none">
+      </button></li>
+    </div>
+    <div class="bg-purple-lighter text-black el-tag-operator" id="filter-operator-selected">
+      <img id="filter-operator-selected-image" src="./public/img/tailwind_icons/not-equal.svg"
+           class="w-5 h-5 object-cover block">
+    </div>
+  </section>
   <div class="el-select"><div class="el-input">
      <input class="el-input__inner" id="element-input" value="Selecionar">
   </div></div>
@@ -172,6 +190,15 @@ function checkReadable(name, style, min = 4.5) {
 let chrome;
 const tmp = mkdtempSync(join(tmpdir(), 'akaunting-theme-browser-'));
 try {
+    const svgDirectory = join(tmp, 'public', 'img', 'tailwind_icons');
+    mkdirSync(svgDirectory, {recursive: true});
+    const svg = process.env.AKAUNTING_CORE_NOT_EQUAL_SVG
+        ? readFileSync(process.env.AKAUNTING_CORE_NOT_EQUAL_SVG, 'utf8')
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">' +
+          '<path d="M4 8H20V11H4z M4 14H20V17H4z M14 4L16 5L10 20L8 19z" fill="#242424"/></svg>';
+    assert.match(svg, /#242424/i, 'Upstream not-equal SVG must contain its hardcoded dark fill');
+    writeFileSync(join(svgDirectory, 'not-equal.svg'), svg);
+
     for (const mode of ['dark', 'light']) {
         writeFileSync(join(tmp, mode + '.html'), fixture(mode));
     }
@@ -243,6 +270,49 @@ try {
         await call('Page.navigate', {url: pathToFileURL(join(tmp, mode + '.html')).href});
         await poll(async () => await evaluate('document.readyState==="complete"'));
         const dark = mode === 'dark';
+        // Both the operator chooser and its selected-filter chip load the
+        // same fixed-color SVG. Test the actual rendered icon color by drawing
+        // the image with its computed CSS filter into an isolated canvas.
+        for (const [iconSelector, backgroundSelector] of [
+            ['#filter-operator-not-equal', '#filter-operator-popup'],
+            ['#filter-operator-selected-image', '#filter-operator-selected'],
+        ]) {
+            const sampled = await evaluate([
+                '(()=>{',
+                'const image=document.querySelector(' + JSON.stringify(iconSelector) + ');',
+                'const background=document.querySelector(' + JSON.stringify(backgroundSelector) + ');',
+                'if (!image.complete || !image.naturalWidth) throw Error("SVG icon not loaded");',
+                'const canvas=document.createElement("canvas");',
+                'canvas.width=24;canvas.height=24;',
+                'const context=canvas.getContext("2d");',
+                'const iconFilter=getComputedStyle(image).filter;',
+                'context.filter=iconFilter;',
+                'context.drawImage(image,0,0,24,24);',
+                'const pixels=context.getImageData(0,0,24,24).data;',
+                'let color;',
+                'for(let i=0;i<pixels.length;i+=4) {',
+                '  if(pixels[i+3] >= 250) {',
+                '    color="rgb("+pixels[i]+", "+pixels[i+1]+", "+pixels[i+2]+")";',
+                '    break;',
+                '  }',
+                '}',
+                'if(!color) throw Error("No opaque SVG pixel");',
+                'return {filter:iconFilter, foreground:color,',
+                '  background:getComputedStyle(background).backgroundColor};',
+                '})()',
+            ].join(''));
+            const ratio = checkReadable(mode + ' ' + iconSelector, {
+                color: sampled.foreground, backgroundColor: sampled.background,
+            });
+            if (dark) {
+                assert.notEqual(sampled.filter, 'none',
+                    'Dark theme must recolor fixed dark SVG operator icons');
+            } else {
+                assert.equal(sampled.filter, 'none',
+                    'Light theme must preserve the original SVG colors');
+            }
+            console.log(mode, iconSelector, ratio + ':1');
+        }
         const checks = [
             ['dashboard row badge', '#user-badge'],
             ['new dashboard action', '#new-dashboard'],

@@ -183,6 +183,14 @@ html.lcc-theme-dark .el-select-dropdown__item.hover span,
 html.lcc-theme-dark .el-select-dropdown__item:hover span {
     color: #f1f5f9 !important;
 }
+/* Akaunting SearchString/AkauntingSearch use a fixed #242424 SVG for the
+   "not equal" operator, unlike the font-based "equal" icon. Recolor only that
+   asset under the dark theme, in both the chooser and selected filter chips.
+   Do not invert the application's other SVGs or affect light mode. */
+html.lcc-theme-dark .js-search img[src*="/public/img/tailwind_icons/not-equal.svg"] {
+    filter: brightness(0) invert(1) !important;
+}
+
 /* Element UI: rows may use :hover, .hover-row, .current-row or fixed-column clones. */
 html.lcc-theme-dark .el-table--enable-row-hover .el-table__body tr:hover > td,
 html.lcc-theme-dark .el-table__body tr.hover-row > td,
