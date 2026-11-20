@@ -92,10 +92,6 @@
     position: relative;
     z-index: 1;
 }
-#app > .relative > .w-full {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 1rem;
-}
 @media (max-width: 1023px) {
     #app::before { opacity: {{ max(0, min(100, (int) ($options['background_opacity'] ?? 10))) / 160 }}; }
 }

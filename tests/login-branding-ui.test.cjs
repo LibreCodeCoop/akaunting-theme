@@ -66,13 +66,13 @@ test('domain registry verifies DNS and TLS, status is pending until checks pass'
     assert.match(registry, /verify_peer_name/);
 });
 
-test('public login background never paints oversized artwork over the credential form', () => {
+test('public login background stays decorative without covering the authentication layout', () => {
     assert.match(login, /#app::before \{/);
     assert.match(login, /background-size: cover;/);
     assert.match(login, /background_opacity'\] \?\? 10/);
     assert.match(login, /pointer-events: none;/);
-    assert.match(login, /#app > \.relative > \.w-full/);
-    assert.match(login, /background-color: rgba\(255, 255, 255, 0\.9\)/);
+    assert.match(login, /background-color: #f8fafc/);
+    assert.doesNotMatch(login, /#app > \.relative > \.w-full/);
 });
 
 test('login footer is additive, configurable and leaves upstream Akaunting attribution intact', () => {
@@ -89,4 +89,14 @@ test('login footer is additive, configurable and leaves upstream Akaunting attri
     assert.match(global, /name="background_opacity"/);
     assert.match(global, /name="alias_zone"/);
     assert.match(read('Http/Controllers/LoginSettingsController.php'), /starts_with:https:\/\//);
+});
+
+test('transparent uploaded login logo does not sit on an opaque white content column', () => {
+    // Core renders the login logo inside #app > .relative > .w-full.
+    // A background on that whole column masks PNG transparency even though
+    // Laravel preserved the original RGBA file bytes.
+    assert.doesNotMatch(login,
+        /#app\s*>\s*\.relative\s*>\s*\.w-full\s*\{[^}]*background-color\s*:/s);
+    assert.match(login, /original\.src\s*=\s*logo/);
+    assert.match(login, /object-fit:contain/);
 });
