@@ -23,7 +23,26 @@ The module adds configurable company colors, company imagery, a public login bac
 
 ## Install
 
-Install using the Akaunting module system with module alias `theme`; do not patch Core. Run module migrations before enabling the module, then clear compiled views and application cache. A public storage symlink (`php artisan storage:link`) is needed for uploaded, non-sensitive brand images. Akaunting 3 serves public assets under `/public/`, so theme uploads use `/public/storage/` rather than the Core's protected `/storage/` URL.
+Install using the Akaunting module system with module alias `theme`; do not
+patch Core. Run module migrations before enabling the module. For the public
+login and cross-domain endpoint to load **before company authentication**, also
+register the installed directory as a standard application Composer dependency
+from the Akaunting root:
+
+    composer config repositories.librecode-theme path modules/Theme
+    composer require 'librecodecoop/akaunting-theme:*@dev'
+    php artisan package:discover --ansi
+
+This is Composer/Laravel package discovery, not a Docker integration and not
+a direct edit to Laravel's generated package manifest. Composer links the
+existing module directory rather than installing a second copy. Dependency
+metadata must remain in the application's Composer manifests during normal
+updates. If an Akaunting upgrade replaces the entire checkout with a hard
+reset, reinstall or provision this application dependency after the reset;
+see `docs/company-domains.md`. A public storage symlink
+(`php artisan storage:link`) is needed for uploaded, non-sensitive brand
+images. Akaunting 3 serves public assets under `/public/`, so theme uploads
+use `/public/storage/` rather than the Core's protected `/storage/` URL.
 
 Akaunting 3.3.x/PHP 8.3 is the development target. Verify runtime compatibility with your exact Core version before deployment; do not assume the module is production-certified solely because it installs.
 

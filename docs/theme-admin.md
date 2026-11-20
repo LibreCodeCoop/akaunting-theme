@@ -57,9 +57,10 @@ registered through Laravel package discovery for public login and browser
 company-domain routing. This provider does not register company admin routes.
 Its PHP source lives in the independent module.
 
-For installations using a module directory instead of Composer's usual package
-require flow, use the module's provider registration script described in
-company-domains.md. Reapply after framework/composer package discovery runs.
+Register the module as a Composer path dependency of the Akaunting application
+as described in company-domains.md. Laravel package discovery then loads the
+public provider automatically, including after Composer autoload regeneration.
+Do not patch Laravel's generated package manifest or the generic Docker runtime.
 
 The global login can append a configurable text/HTTPS credit below the
 original Akaunting attribution. The original attribution must remain intact.

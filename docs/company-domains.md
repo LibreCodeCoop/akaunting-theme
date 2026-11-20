@@ -70,21 +70,41 @@ Theme module is therefore required for anonymous login and the public handoff
 endpoint. It is declared in the Theme package's composer.json for installations
 using normal Composer package discovery.
 
-For the existing Akaunting module-directory installation, **without editing
-the Akaunting PHP source or root composer manifests**, register the Theme's
-public provider in Laravel's generated package manifest:
+Install the Theme module in `modules/Theme` using the Akaunting module
+system. Then register the **same directory** as a Composer path package from
+the Akaunting application root:
 
-    php modules/Theme/scripts/register_guest_provider.php /var/www/html install
-    php modules/Theme/scripts/register_guest_provider.php /var/www/html verify
+    composer config repositories.librecode-theme path modules/Theme
+    composer require 'librecodecoop/akaunting-theme:*@dev'
+    php artisan package:discover --ansi
 
-The script is idempotent, touches only bootstrap/cache/packages.php and
-preserves existing packages. If Composer package discovery regenerates this
-cache, re-run the install command as a deployment step. To reverse it:
+Composer creates a link under `vendor/librecodecoop/akaunting-theme` to the
+existing module directory; it does not create a second module or modify the
+Akaunting PHP source. Its normal Laravel discovery adds the
+`Modules\Theme\Providers\Guest` provider to the **generated** package
+manifest. Future `composer install` and `composer dump-autoload` retain
+that provider because the package is declared in `composer.json` and
+`composer.lock`. Do not edit `bootstrap/cache/packages.php` directly.
 
-    php modules/Theme/scripts/register_guest_provider.php /var/www/html remove
+After installation, verify from the application root:
 
-An installation using normal Composer path-package discovery does not need
-the generated-manifest fallback because the package advertises the provider.
+    php artisan tinker --execute="echo app()->providerIsLoaded(\Modules\Theme\Providers\Guest::class) ? 'registered' : 'missing';"
+
+To unregister this early provider during a planned uninstall, remove the
+Composer dependency before deleting the module directory:
+
+    composer remove librecodecoop/akaunting-theme
+    composer config --unset repositories.librecode-theme
+
+**Application checkout upgrades:** a deployment that resets the Akaunting
+checkout to a clean upstream tag with `git reset --hard` will also discard
+local changes to its root Composer manifests. Such deployments must preserve
+this **application dependency configuration** in their provisioned checkout,
+or reinstall the Theme Composer dependency after the reset and before the
+next Composer autoload rebuild. That is an application-dependency lifecycle
+requirement; no Theme-specific shell hook belongs in a generic Docker
+entrypoint. Composer-only updates that retain the dependency do not need any
+manual provider repair.
 
 This bootstrap enables public branding and the handoff endpoint. The
 authenticated domain *enforcement* remains independently controlled by
