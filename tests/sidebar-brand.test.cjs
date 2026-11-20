@@ -23,3 +23,9 @@ test('dark mode gives the narrow rail an explicit dark background and readable i
     assert.match(template, /html\.lcc-theme-dark body \.js-menu > \.menu-scroll\.bg-lilac-900/);
     assert.match(template, /html\.lcc-theme-dark[^\n]*\.menu-scroll[^\n]*\.text-purple/);
 });
+
+test('company PNG transparency is preserved on dark sidebar and compact selector', () => {
+    assert.match(template, /#sidenav-main \.lcc-theme-company-logo/);
+    assert.doesNotMatch(template, /html\.lcc-theme-dark #sidenav-main \.lcc-theme-company-logo\s*\{[^}]*background(?:-color)?\s*:\s*(?:#fff(?:fff)?|white)/i);
+    assert.doesNotMatch(template, /html\.lcc-theme-dark #sidenav-main \.lcc-theme-company-logo\s*\{[^}]*padding\s*:/i);
+});

@@ -46,11 +46,11 @@ html:not(.lcc-theme-dark) body .hover\:bg-purple:hover svg {
     color: #ffffff !important;
 }
 @if ($logo)
-/* The company selector gets its own icon. The upstream Akaunting attribution stays in the footer. */
+/* The company selector uses the original RGBA company logo. Do not paint a
+   white backing tile in dark mode or add padding that reduces its visible size.
+   The upstream Akaunting attribution remains in the footer. */
+.lcc-theme-company-logo { background-color: transparent; padding: 0; }
 #sidenav-main .lcc-theme-company-logo { width: 28px; height: 28px; object-fit: contain; }
-html.lcc-theme-dark #sidenav-main .lcc-theme-company-logo {
-    background-color: #ffffff; padding: 2px; border-radius: 5px;
-}
 @endif
 /* Dark mode follows the rendered core surfaces without mutating upstream styles. */
 html.lcc-theme-dark { color-scheme: dark; }

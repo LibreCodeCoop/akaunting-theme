@@ -41,7 +41,12 @@ const fixture = (mode) => `<!doctype html>
 <div class="js-menu"><div class="menu-scroll bg-lilac-900">
 <span class="text-purple" id="rail-icon">Menu</span></div>
 <nav id="sidenav-main" class="menu-list js-main-menu bg-purple-lighter">
+  <!-- Core layouts/admin/menu.blade.php wraps the company icon in a
+       button inside #sidenav-main; Theme replaces its src and adds the class. -->
   <button data-dropdown-toggle="dropdown-menu-company" type="button">
+    <span id="company-icon-wrapper"><img id="company-icon"
+      class="lcc-theme-company-logo" alt="LibreCode"
+      src="./public/img/tailwind_icons/not-equal.svg"></span>
     <span class="text-purple" id="company-label">LibreCode</span>
   </button>
   <div class="main-menu"><a id="main-link" class="text-purple" href="#">Painel</a></div>
@@ -304,6 +309,13 @@ try {
         await call('Page.navigate', {url: pathToFileURL(join(tmp, mode + '.html')).href});
         await poll(async () => await evaluate('document.readyState==="complete"'));
         const dark = mode === 'dark';
+        const companyLogo = await style('#company-icon');
+        assert.equal(companyLogo.backgroundColor, 'rgba(0, 0, 0, 0)',
+            'Theme company logo must preserve the uploaded PNG alpha in the sidebar');
+        const companyLogoPadding = await evaluate(
+            'getComputedStyle(document.querySelector("#company-icon")).padding');
+        assert.equal(companyLogoPadding, '0px',
+            'Theme must not shrink company identity into a padded white tile');
         // The Core search field explicitly requests bg-transparent. Global
         // Theme input rules must not turn it into a full-width opaque bar.
         const searchInput = await style('#native-search-filter-input');
