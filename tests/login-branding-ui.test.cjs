@@ -47,3 +47,12 @@ test('domain registry verifies DNS and TLS, status is pending until checks pass'
     assert.match(registry, /FILTER_FLAG_NO_RES_RANGE/);
     assert.match(registry, /verify_peer_name/);
 });
+
+test('public login background never paints oversized artwork over the credential form', () => {
+    assert.match(login, /#app::before \{/);
+    assert.match(login, /background-size: contain;/);
+    assert.match(login, /opacity: 0\.10;/);
+    assert.match(login, /pointer-events: none;/);
+    assert.match(login, /#app > \.relative > \.w-full/);
+    assert.match(login, /background-color: rgba\(255, 255, 255, 0\.9\)/);
+});

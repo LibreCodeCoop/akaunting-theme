@@ -20,10 +20,37 @@
 @endif
 <style id="lcc-theme-public-login">
 @if ($background)
+/* Keep the supplied artwork as a quiet background layer. Some company
+   assets contain large lettering; full-strength 'cover' can put that lettering
+   directly behind email/password fields and make the login unreadable. */
 #app {
-    background-image: url("{{ $background }}") !important;
-    background-size: cover !important;
-    background-position: center center !important;
+    background-image: none !important;
+    background-color: #f8fafc !important;
+    position: relative;
+    isolation: isolate;
+}
+#app::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("{{ $background }}");
+    background-size: contain;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: 0.10;
+    pointer-events: none;
+    z-index: 0;
+}
+#app > .relative {
+    position: relative;
+    z-index: 1;
+}
+#app > .relative > .w-full {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 1rem;
+}
+@media (max-width: 1023px) {
+    #app::before { opacity: 0.06; }
 }
 @endif
 @if (! $options['login_slider'])

@@ -10,6 +10,11 @@ In Settings > Themes by company, users see their enabled Akaunting companies.
 A sole company opens directly. The editor always displays the company name
 and ID. Access is protected by the Core company-settings authorization.
 
+The public login background appears as a **10% opacity decorative layer**
+behind the UI, using contain sizing rather than a full-strength crop, to
+maintain contrast when the image contains large text or a logo. On small
+screens, opacity is reduced further.
+
 Each image control has a saved preview, a replacement input and an unlink
 control. An empty input preserves the saved file. Upload wins if a new file
 and unlink are submitted together. Unlink clears the active reference; old
