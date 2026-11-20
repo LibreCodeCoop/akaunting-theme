@@ -38,3 +38,11 @@ test('light mode purple hover renders white foreground over dark purple rather t
     assert.match(css, /background-color: #55588b !important;/);
     assert.match(css, /html:not\(\.lcc-theme-dark\) body \.hover\\:bg-purple:hover span/);
 });
+
+
+test('document information tooltip arrow supports Core class markup as well as data attribute', () => {
+    assert.match(css,
+        /html\.lcc-theme-dark \.information-content :is\(\.data-popper-arrow, \[data-popper-arrow\]\)::before/);
+    assert.match(css, /background-color: var\(--lcc-dark-elevated\) !important/);
+    assert.match(css, /border-color: var\(--lcc-dark-border\) !important/);
+});

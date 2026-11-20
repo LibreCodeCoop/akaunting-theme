@@ -363,7 +363,11 @@ html.lcc-theme-dark #tooltip-profile [data-popper-arrow]::before {
 html.lcc-theme-dark .information-content {
     background-color: var(--lcc-dark-elevated) !important;
 }
-html.lcc-theme-dark .information-content [data-popper-arrow]::before {
+/* The document information popover (documents/index/information.blade.php)
+   uses .data-popper-arrow as a CSS CLASS; standard Akaunting tooltips use
+   [data-popper-arrow] as an HTML attribute. Keep both forms on the same
+   elevated surface instead of allowing a pale diamond in dark mode. */
+html.lcc-theme-dark .information-content :is(.data-popper-arrow, [data-popper-arrow])::before {
     background-color: var(--lcc-dark-elevated) !important;
     border-color: var(--lcc-dark-border) !important;
 }

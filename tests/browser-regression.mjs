@@ -103,8 +103,10 @@ const fixture = (mode) => `<!doctype html>
   </div>
   <div id="document-info-tip" role="tooltip" class="information-content bg-lilac-900">
     <span>Detalhes da transação</span>
-    <div id="document-info-arrow" data-popper-arrow
-      class="w-2 h-2 before:absolute before:w-2 before:h-2 before:bg-lilac-900 before:transform before:rotate-45"></div>
+    <!-- Core documents/index/information.blade.php puts data-popper-arrow
+         in the CLASS attribute, not as a data-popper-arrow HTML attribute. -->
+    <div id="document-info-arrow"
+      class="absolute w-2 h-2 before:content-[' '] before:absolute before:w-2 before:h-2 before:bg-lilac-900 before:border-gray-200 before:transform before:rotate-45 before:border before:border-t-0 before:border-l-0 data-popper-arrow"></div>
   </div>
   <div id="cashflow-chart" class="apexcharts-canvas">
     <span id="chart-legend" class="apexcharts-legend-text" style="color: #424242;">Entrada</span>
@@ -305,6 +307,13 @@ try {
                 const pseudo = await evaluate(`getComputedStyle(document.querySelector(${JSON.stringify(arrow)}),'::before').backgroundColor`);
                 assert.equal(pseudo,bubble.backgroundColor,
                     'Tooltip arrow remains a light square: '+arrow);
+                if (arrow === '#document-info-arrow') {
+                    const edge = await evaluate(`getComputedStyle(document.querySelector('#document-info-arrow'),'::before').borderRightColor`);
+                    if (mode === 'dark') {
+                        assert.notEqual(edge, 'rgb(229, 231, 235)',
+                            'Document information popover arrow retains its light border');
+                    }
+                }
             }
             const menuHover = await hover('#dropdown-item');
             checkReadable('dropdown hover', menuHover);
