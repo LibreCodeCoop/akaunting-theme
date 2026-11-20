@@ -3,56 +3,33 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const {spawnSync} = require('node:child_process');
-const script = path.join(__dirname, '../scripts/register_guest_provider.php');
+const root = path.join(__dirname, '..');
+const read = file => fs.readFileSync(path.join(root,file),'utf8');
 
-test('module-owned provider discovery installer is idempotent and reversible', () => {
-    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'lcc-theme-pkg-'));
-    try {
-        for (const name of ['bootstrap/cache', 'modules/Theme/Providers']) {
-            fs.mkdirSync(path.join(base, name), {recursive: true});
-        }
-        fs.writeFileSync(path.join(base, 'bootstrap/app.php'), '<?php return null;');
-        fs.writeFileSync(path.join(base, 'modules/Theme/Providers/Guest.php'), '<?php return null;');
-        const manifest = path.join(base, 'bootstrap/cache/packages.php');
-        fs.writeFileSync(manifest, "<?php return ['unrelated/pkg'=>['providers'=>['Acme\\\\App']]];\n");
-        const original = fs.readFileSync(manifest, 'utf8');
-        const hasPhp = spawnSync('php', ['-v'], {encoding:'utf8'}).status === 0;
-        const run = mode => hasPhp
-            ? spawnSync('php', [script, base, mode], {encoding:'utf8'})
-            : spawnSync('docker', ['run','--rm','--network','none',
-                '-v',path.join(__dirname,'..')+':/app:ro',
-                '-v',base+':/sandbox', 'php:8.3-cli',
-                'php','/app/scripts/register_guest_provider.php','/sandbox',mode],
-                {encoding:'utf8'});
-        assert.equal(run('verify').status, 1);
-        assert.equal(run('install').status, 0);
-        assert.equal(run('verify').status, 0);
-        const installed = fs.readFileSync(manifest, 'utf8');
-        assert.match(installed, /librecodecoop\/akaunting-theme/);
-        assert.match(installed, /unrelated\/pkg/);
-        assert.equal(run('install').status, 0);
-        assert.equal(fs.readFileSync(manifest, 'utf8'), installed, 'Idempotent install must not rewrite');
-        assert.equal(run('remove').status, 0);
-        assert.equal(run('verify').status, 1);
-        assert.match(fs.readFileSync(manifest,'utf8'), /unrelated\/pkg/);
-        assert.equal(run('remove').status, 0);
-        assert.ok(original.includes('unrelated/pkg'));
-    } finally {
-        fs.rmSync(base, {recursive:true, force:true});
-    }
+test('public guest provider is discoverable through the module own Composer package', () => {
+  const moduleComposer = JSON.parse(read('composer.json'));
+  assert.equal(moduleComposer.name, 'librecodecoop/akaunting-theme');
+  assert.equal(moduleComposer.type, 'akaunting-module');
+  assert.deepEqual(moduleComposer.extra.laravel.providers, ['Modules\\Theme\\Providers\\Guest']);
+  assert.equal(moduleComposer.autoload['psr-4']['Modules\\Theme\\'], './');
+  assert.equal(fs.existsSync(path.join(root,'scripts/register_guest_provider.php')), false,
+      'Do not edit Laravel generated package manifests directly');
 });
 
-test('the guest provider does not register company admin routes before Akaunting macros', () => {
-    const guest = fs.readFileSync(path.join(__dirname,'../Providers/Guest.php'), 'utf8');
-    const main = fs.readFileSync(path.join(__dirname,'../Providers/Main.php'), 'utf8');
-    const moduleComposer = JSON.parse(fs.readFileSync(path.join(__dirname,'../composer.json'), 'utf8'));
-    assert.deepEqual(moduleComposer.extra.laravel.providers, ['Modules\\Theme\\Providers\\Guest']);
-    assert.match(guest, /Routes\/public.php/);
-    assert.doesNotMatch(guest, /Routes\/admin.php/);
-    assert.match(guest, /HostContext::class/);
-    assert.match(main, /Routes\/admin.php/);
-    assert.doesNotMatch(main, /Routes\/public.php/);
+test('the guest provider loads only public routes and not company admin macros', () => {
+  const guest = read('Providers/Guest.php');
+  const main = read('Providers/Main.php');
+  assert.match(guest, /Routes\/public.php/);
+  assert.doesNotMatch(guest, /Routes\/admin.php/);
+  assert.match(guest, /HostContext::class/);
+  assert.match(main, /Routes\/admin.php/);
+  assert.doesNotMatch(main, /Routes\/public.php/);
+});
+
+test('operator instructions install and remove through Composer, not via Docker entrypoint', () => {
+  const docs = read('docs/company-domains.md');
+  assert.match(docs,/composer require 'librecodecoop\/akaunting-theme:\*@dev'/);
+  assert.match(docs,/composer remove librecodecoop\/akaunting-theme/);
+  assert.doesNotMatch(docs, /scripts\/register_guest_provider\.php/);
 });

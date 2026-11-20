@@ -13,6 +13,8 @@ jobs:
       - name: PHP syntax
         run: |
           docker run --rm -v "$PWD:/app:ro" php:8.3-cli sh -c 'set -e; find /app -name "*.php" -exec php -l {} \; >/dev/null; php /app/tests/appearance-contract.php; php /app/tests/host-domain-contract.php; php /app/tests/login-host-contract.php; php /app/tests/login-slides-contract.php'
+      - name: Isolated Composer path-package discovery
+        run: sh tests/composer-path-discovery.sh
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
