@@ -21,7 +21,6 @@ final class Main extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/theme.php', 'theme');
         $this->loadRoutesFrom(__DIR__ . '/../Routes/admin.php');
-        $this->loadRoutesFrom(__DIR__ . '/../Routes/public.php');
     }
 
     public function boot(): void
@@ -32,7 +31,11 @@ final class Main extends ServiceProvider
         // Runs after session.start in the native web group, before the
         // company's IdentifyCompany controller middleware. The feature is
         // inert until a global canonical host is explicitly configured.
-        app('router')->pushMiddlewareToGroup('web', HostContext::class);
+        if (! $this->app->providerIsLoaded(Guest::class)) {
+            // Retain the company-only fallback for installations where the
+            // early guest provider has not yet been discovered.
+            app('router')->pushMiddlewareToGroup('web', HostContext::class);
+        }
         if ($this->app->runningInConsole()) {
             $this->commands([PruneExpiredHandoffs::class]);
         }
@@ -105,16 +108,6 @@ final class Main extends ServiceProvider
             ])->render());
         });
 
-        // The public login has no selected company yet. A trusted, active
-        // hostname resolves its brand; arbitrary query-string IDs do not.
-        View::composer('components.layouts.auth.head', static function ($view): void {
-            $options = LoginAppearance::forHost(request()->getHost());
-            if ($options === null) {
-                return;
-            }
-            $view->getFactory()->startPush('head_end', view('theme::components.login', [
-                'options' => $options,
-            ])->render());
-        });
+
     }
 }
