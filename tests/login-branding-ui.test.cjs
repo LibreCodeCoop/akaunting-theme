@@ -36,6 +36,15 @@ test('carousel uses safe DOM primitives and preserves native Akaunting slides as
     assert.match(login, /#app \{/);
     assert.match(login, /background-image: url/);
 });
+test('slide titles and captions wrap within the left carousel column', () => {
+    assert.match(login, /lcc-theme-carousel-slide/);
+    assert.match(login, /overflow: hidden;/);
+    assert.match(login, /lcc-theme-carousel-title/);
+    assert.match(login, /white-space: normal;/);
+    assert.match(login, /overflow-wrap: break-word;/);
+    assert.match(login, /lcc-theme-carousel-caption/);
+    assert.doesNotMatch(login, /text-3xl text-black-400 font-bold/);
+});
 test('login slides use only installed Swiper APIs, preserving looping and autoplay', () => {
     assert.doesNotMatch(login, /swiper\.removeAllSlides\(/);
     assert.doesNotMatch(login, /swiper\.appendSlide\(/);

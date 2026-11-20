@@ -19,6 +19,40 @@
 <link rel="icon" href="{{ $favicon }}" type="image/png" id="lcc-theme-login-favicon">
 @endif
 <style id="lcc-theme-public-login">
+/* Keep slide artwork, long Portuguese headings and subtitles strictly inside
+   the left carousel column, never above the adjacent login form. */
+#app .lcc-theme-carousel-slide {
+    box-sizing: border-box;
+    min-width: 0;
+    overflow: hidden;
+    padding-inline: 1.25rem;
+}
+#app .lcc-theme-carousel-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline: auto;
+}
+#app .lcc-theme-carousel-title {
+    max-width: min(26rem, 95%);
+    margin: 0.75rem auto 0;
+    font-size: clamp(1.05rem, 1.7vw, 1.35rem) !important;
+    line-height: 1.35;
+    font-weight: 600;
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: center;
+    color: #334155 !important;
+}
+#app .lcc-theme-carousel-caption {
+    max-width: min(26rem, 95%);
+    margin: 0.45rem auto 0;
+    font-size: 0.875rem !important;
+    line-height: 1.45;
+    white-space: normal;
+    text-align: center;
+    color: #64748b !important;
+}
 #lcc-theme-login-footer {
     position: fixed;
     right: 6%;
@@ -96,9 +130,10 @@
         // the application's own public filesystem, not untrusted HTML.
         const nodes = slides.map(function (slide) {
             const panel = document.createElement('div');
-            panel.className = 'swiper-slide flex justify-center flex-col items-center';
+            panel.className = 'swiper-slide lcc-theme-carousel-slide flex justify-center flex-col items-center';
             const imageFrame = document.createElement('div');
-            imageFrame.style.cssText = 'width:min(450px,90%);height:300px;';
+            imageFrame.className = 'lcc-theme-carousel-media';
+            imageFrame.style.cssText = 'width:min(420px,94%);height:285px;';
             const image = document.createElement('img');
             image.src = slide.image;
             image.alt = slide.title;
@@ -106,12 +141,12 @@
             imageFrame.appendChild(image);
             panel.appendChild(imageFrame);
             const title = document.createElement('h1');
-            title.className = 'text-3xl text-black-400 font-bold';
+            title.className = 'lcc-theme-carousel-title';
             title.textContent = slide.title;
             panel.appendChild(title);
             if (slide.caption) {
                 const caption = document.createElement('p');
-                caption.className = 'text-base text-black-400 mt-2 text-center';
+                caption.className = 'lcc-theme-carousel-caption';
                 caption.textContent = slide.caption;
                 panel.appendChild(caption);
             }
