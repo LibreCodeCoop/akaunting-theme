@@ -70,3 +70,18 @@ AGPL-3.0-or-later for the original module code. This does not relicense Akauntin
 
 Read docs/theme-admin.md and docs/company-domains.md before activating
 company domain routing in a live installation.
+
+
+### Company login, footer and verified alias zones
+
+The global login editor supports a safe, additive footer credit (text plus an
+optional HTTPS link), an adjustable image-background opacity and custom
+slides. The original Akaunting attribution is always retained. A company
+theme may override the credit/link independently of the instance defaults.
+
+For multi-company installations, a canonical host can have verified company
+subdomains. A separately configured organizational trust zone also permits
+sibling aliases (for example, accounting.example.org beside
+akaunting.example.org); no suffix is inferred automatically. Registration is
+pending until DNS TXT, HTTPS and a server-specific origin proof all pass.
+Cross-origin authenticated session handoff remains disabled by default.

@@ -4,6 +4,11 @@
 
 Akaunting companies remain the source of truth. A company may have several
 verified, immediate subdomains under the configured canonical base host.
+When the instance administrator explicitly specifies a trusted corporate
+alias zone, a sibling hostname within that zone is also supported (for
+example, accounting.example.org beside akaunting.example.org). The base
+hostname must be an immediate child of the chosen zone. No arbitrary,
+third-party or multi-level aliases are accepted.
 Aliases share the same company theme. One active alias is primary.
 
 1. An instance administrator enters the canonical hostname under Default
@@ -13,7 +18,8 @@ Aliases share the same company theme. One active alias is primary.
 3. Provision a public DNS A/AAAA record for the reverse proxy, the displayed
    DNS TXT challenge and a valid HTTPS certificate on that hostname.
 4. Select Verify DNS and HTTPS. The module validates the exact TXT value,
-   a public destination IP and a trusted TLS certificate.
+   a public destination IP, a trusted TLS certificate and an HTTP origin
+   challenge served by this very Akaunting instance.
 5. Activate only after verification. Duplicate hostnames, arbitrary external
    domains, private destinations, wildcards and nested subdomains are rejected.
 
@@ -83,3 +89,10 @@ the generated-manifest fallback because the package advertises the provider.
 This bootstrap enables public branding and the handoff endpoint. The
 authenticated domain *enforcement* remains independently controlled by
 AKAUNTING_THEME_DOMAIN_ROUTING_ENABLED (disabled by default).
+
+
+Registering an alias never changes DNS or the proxy, and never proves that
+the hostname serves this Akaunting instance. If the hostname currently
+returns another service or HTTP 503, leave it pending until the proxy,
+valid certificate and DNS TXT challenge are corrected. Enabling cross-host
+session routing is a separate deployment decision.

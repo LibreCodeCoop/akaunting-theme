@@ -50,9 +50,25 @@ test('domain registry verifies DNS and TLS, status is pending until checks pass'
 
 test('public login background never paints oversized artwork over the credential form', () => {
     assert.match(login, /#app::before \{/);
-    assert.match(login, /background-size: contain;/);
-    assert.match(login, /opacity: 0\.10;/);
+    assert.match(login, /background-size: cover;/);
+    assert.match(login, /background_opacity'\] \?\? 10/);
     assert.match(login, /pointer-events: none;/);
     assert.match(login, /#app > \.relative > \.w-full/);
     assert.match(login, /background-color: rgba\(255, 255, 255, 0\.9\)/);
+});
+
+test('login footer is additive, configurable and leaves upstream Akaunting attribution intact', () => {
+    const guest = read('Providers/Guest.php');
+    const footer = read('Resources/views/components/public-footer.blade.php');
+    const global = read('Resources/views/global-login.blade.php');
+    assert.match(guest, /components\.layouts\.auth\.footer/);
+    assert.match(guest, /startPush\('footer_end'/);
+    assert.match(footer, /\$options\['footer_text'\]/);
+    assert.match(footer, /rel="noopener noreferrer"/);
+    assert.doesNotMatch(footer, /powered by Akaunting/i);
+    assert.match(global, /name="footer_text"/);
+    assert.match(global, /name="footer_url"/);
+    assert.match(global, /name="background_opacity"/);
+    assert.match(global, /name="alias_zone"/);
+    assert.match(read('Http/Controllers/LoginSettingsController.php'), /starts_with:https:\/\//);
 });

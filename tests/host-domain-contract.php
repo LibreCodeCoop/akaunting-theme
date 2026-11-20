@@ -41,6 +41,26 @@ foreach ($invalid as $host) {
 if (D::normalize('ALPHA.AKAUNTING.EXAMPLE.COOP.') !== 'alpha.akaunting.example.coop') {
     throw new RuntimeException('Normalization failed.');
 }
+// Explicit, administrator-controlled organizational zone permits sibling
+// aliases while preserving one-label/suffix restrictions.
+if (D::validSubdomain('accounting.example.coop', $base)) {
+    throw new RuntimeException('Sibling alias accepted without configured trust zone.');
+}
+foreach (['accounting.example.coop', 'finance.example.coop'] as $alias) {
+    if (! D::validSubdomain($alias, $base, 'example.coop')) {
+        throw new RuntimeException('Explicit corporate alias rejected: ' . $alias);
+    }
+}
+foreach (['accounting.example.coop.attacker.test','x.accounting.example.coop',
+          'example.coop', 'akaunting.example.coop','evil.example.org',
+          'accounting.coop', '127.0.0.1'] as $alias) {
+    if (D::validSubdomain($alias, $base, 'example.coop')) {
+        throw new RuntimeException('Untrusted alias accepted: ' . $alias);
+    }
+}
+if (D::validSubdomain('accounting.example.coop', $base, 'coop')) {
+    throw new RuntimeException('Invalid trust zone accepted.');
+}
 if (D::validSubdomain('alpha.akaunting.example.coop', '')) {
     throw new RuntimeException('Unconfigured instance host accepted.');
 }

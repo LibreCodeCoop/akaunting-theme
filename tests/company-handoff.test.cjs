@@ -18,6 +18,13 @@ test('cross-domain routing starts disabled, requires canonical verified hosts an
     assert.match(ticket, /hash\('sha256', \$ticket\)/);
     assert.doesNotMatch(ticket, /SESSION_DOMAIN/);
 });
+test('verified sibling-domain aliases require an explicit instance-wide trust zone', () => {
+    const registry = read('Domain/DomainRegistry.php');
+    const controller = read('Http/Controllers/DomainController.php');
+    assert.match(registry, /oneLabelBelow\(\$baseHost, \$aliasZone\)/);
+    assert.match(registry, /\$host !== \$baseHost/);
+    assert.match(controller, /LoginAppearance::options\(\)\['alias_zone'\]/);
+});
 test('handoff is single use, host-bound and rechecks company membership', () => {
     assert.match(ticket, /->where\('destination_host', \$host\)/);
     assert.match(ticket, /->whereNull\('consumed_at'\)/);

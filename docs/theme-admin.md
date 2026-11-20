@@ -59,3 +59,9 @@ Its PHP source lives in the independent module.
 For installations using a module directory instead of Composer's usual package
 require flow, use the module's provider registration script described in
 company-domains.md. Reapply after framework/composer package discovery runs.
+
+The global login can append a configurable text/HTTPS credit below the
+original Akaunting attribution. The original attribution must remain intact.
+The login background has an administrator-adjustable opacity (0–100%);
+artwork should keep its financial motif on the carousel side and preserve
+legibility around the credential form.

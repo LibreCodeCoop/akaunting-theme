@@ -73,7 +73,10 @@ namespace {
         'id' => 1,
         'options' => json_encode([
             'base_host' => 'akaunting.example.coop',
+            'alias_zone' => 'example.coop',
             'brand_name' => 'Instance brand',
+            'footer_text' => 'Hosted by instance',
+            'footer_url' => 'https://example.coop',
             'favicon' => 'akaunting-theme/global/fav.png',
             'login_slider' => false,
             'slides' => [['title' => 'Global', 'image' => 'akaunting-theme/global/one.png']],
@@ -100,6 +103,7 @@ namespace {
     $main = LoginAppearance::forHost('akaunting.example.coop');
     check($main['brand_name'] === 'Instance brand', 'Default login must be distinct.');
     check($main['login_slider'] === false, 'Default slider setting lost.');
+    check($main['footer_text'] === 'Hosted by instance', 'Instance footer missing.');
     $alpha = LoginAppearance::forHost('alpha.akaunting.example.coop');
     check($alpha['logo'] === 'akaunting-theme/7/logo.png', 'Company logo not loaded.');
     check($alpha['favicon'] === 'akaunting-theme/global/fav.png', 'Global favicon fallback missing.');
@@ -110,6 +114,14 @@ namespace {
         'Suffix spoofing accepted.');
     check(LoginAppearance::forHost('unregistered.akaunting.example.coop') === null,
         'Unverified hostname accepted.');
+    DB::$rows['lcc_theme_domains'][] = [
+        'host' => 'accounting.example.coop', 'status' => 'active', 'company_id' => 7,
+    ];
+    check(LoginAppearance::forHost('accounting.example.coop')['brand_name'] === 'Alpha company',
+        'Configured sibling alias did not inherit company branding.');
+    check(LoginAppearance::forHost('unknown.example.coop') === null,
+        'Unregistered corporate hostname was accepted.');
+
     DB::$rows['companies'][0]['enabled'] = 0;
     check(LoginAppearance::forHost('alpha.akaunting.example.coop') === null,
         "Disabled company branded login remained reachable.");
@@ -117,6 +129,8 @@ namespace {
 
     DB::$rows['lcc_theme_companies'][0]['options'] = json_encode([
         'brand_name' => 'Alpha company',
+        'footer_credit' => 'Maintained by Alpha',
+        'footer_url' => 'https://alpha.example.coop',
         'login_inherit_slider' => false,
         'login_slider' => true,
         'login_slides' => [['title' => 'Company', 'image' => 'akaunting-theme/7/company.png']],
@@ -124,6 +138,9 @@ namespace {
     $overridden = LoginAppearance::forHost('alpha.akaunting.example.coop');
     check($overridden['login_slider'] === true, 'Company slider override ignored.');
     check($overridden['slides'][0]['title'] === 'Company', 'Company slide override ignored.');
+    check($overridden['footer_text'] === 'Maintained by Alpha', 'Company footer was not selected.');
+    check($overridden['footer_url'] === 'https://alpha.example.coop', 'Company footer link was not selected.');
+
 
     echo "PASS: public login host isolation, global fallback and company overrides\n";
 }
