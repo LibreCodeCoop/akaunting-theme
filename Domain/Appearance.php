@@ -18,6 +18,8 @@ final class Appearance
         'login_background' => '',
         'loading_spinner' => '',
         'login_slider' => true,
+        'login_slides' => [],
+        'login_inherit_slider' => true,
         'sidebar_color' => '#ffffff',
         'menu_color' => '#ffffff',
         'content_color' => '#f8f9fa',

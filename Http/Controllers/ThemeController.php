@@ -6,20 +6,47 @@ declare(strict_types=1);
 
 namespace Modules\Theme\Http\Controllers;
 
+use App\Models\Common\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 use Modules\Theme\Domain\Appearance;
+use Modules\Theme\Domain\DomainRegistry;
 
 final class ThemeController extends Controller
 {
+    public function companies(): View|RedirectResponse
+    {
+        abort_unless(auth()->user()?->can('read-settings-company'), 403);
+
+        // The native Akaunting companies are the source of truth. No second CRUD.
+        $companies = auth()->user()->companies()->enabled()->orderBy('companies.name')->get();
+        if ($companies->count() === 1) {
+            return redirect()->route('theme.settings.index', ['company_id' => $companies->first()->id]);
+        }
+
+        $configured = \Illuminate\Support\Facades\DB::table('lcc_theme_companies')
+            ->whereIn('company_id', $companies->pluck('id'))->pluck('company_id')->all();
+
+        return view('theme::companies', compact('companies', 'configured'));
+    }
+
     public function index(): View
     {
         abort_unless(auth()->user()?->can('read-settings-company'), 403);
 
-        return view('theme::settings', ['options' => Appearance::options((int) company_id())]);
+        $company = Company::findOrFail((int) company_id());
+        $count = auth()->user()->companies()->enabled()->count();
+        $hasActiveDomain = DomainRegistry::primaryForCompany((int) company_id()) !== null;
+
+        return view('theme::settings', [
+            'company' => $company,
+            'companyCount' => $count,
+            'hasActiveDomain' => $hasActiveDomain,
+            'options' => Appearance::options((int) company_id()),
+        ]);
     }
 
     public function save(Request $request): RedirectResponse
@@ -39,6 +66,9 @@ final class ThemeController extends Controller
             'login_background' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
             'loading_spinner' => 'nullable|file|mimetypes:image/gif|mimes:gif|dimensions:max_width=320,max_height=320|max:1024',
             'remove_loading_spinner' => 'sometimes|boolean',
+            'remove_logo' => 'sometimes|boolean',
+            'remove_favicon' => 'sometimes|boolean',
+            'remove_login_background' => 'sometimes|boolean',
         ]);
 
         $companyId = (int) company_id();
@@ -46,11 +76,53 @@ final class ThemeController extends Controller
             'brand_name', 'sidebar_color', 'menu_color', 'content_color',
             'support_url', 'documentation_url', 'footer_credit',
         ]));
-        $options['login_slider'] = $request->boolean('login_slider');
+        // The public-login editor is unlocked only after domain verification.
+        $hasActiveDomain = DomainRegistry::primaryForCompany($companyId) !== null;
+        if ($hasActiveDomain) {
+            $options['login_inherit_slider'] = $request->boolean('login_inherit_slider');
+            $options['login_slider'] = $request->boolean('login_slider');
 
+            $slideData = $request->validate([
+                'slide_title' => 'nullable|array|max:6',
+                'slide_title.*' => 'nullable|string|max:120',
+                'slide_caption' => 'nullable|array|max:6',
+                'slide_caption.*' => 'nullable|string|max:280',
+            ]);
+            $priorSlides = Appearance::options($companyId)['login_slides'];
+            $slides = [];
+            for ($i = 0; $i < 6; $i++) {
+                $title = trim((string) ($slideData['slide_title'][$i] ?? ''));
+                $caption = trim((string) ($slideData['slide_caption'][$i] ?? ''));
+                $image = $priorSlides[$i]['image'] ?? '';
+                $file = 'slide_image_' . $i;
+                $request->validate([
+                    $file => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
+                    'remove_slide_' . $i => 'sometimes|boolean',
+                ]);
+                if ($request->hasFile($file)) {
+                    $image = $request->file($file)->store(
+                        'akaunting-theme/' . $companyId . '/slides', 'public');
+                } elseif ($request->boolean('remove_slide_' . $i)) {
+                    $image = '';
+                }
+                if ($title !== '' && $image !== '') {
+                    $slides[$i] = ['title' => $title, 'caption' => $caption, 'image' => $image];
+                }
+            }
+            $options['login_slides'] = $slides;
+        }
+
+        if (! $hasActiveDomain &&
+            ($request->hasFile('login_background') || $request->boolean('remove_login_background'))) {
+            abort(422, trans('theme::general.login_locked_until_verified'));
+        }
         foreach (['logo', 'favicon', 'login_background'] as $key) {
+            // Upload wins over a simultaneous removal checkbox. Physical files
+            // remain for audit/rollback; only the scoped reference is cleared.
             if ($request->hasFile($key)) {
                 $options[$key] = $request->file($key)->store('akaunting-theme/' . $companyId, 'public');
+            } elseif ($request->boolean('remove_' . $key)) {
+                $options[$key] = '';
             }
         }
         // Upload takes precedence if both controls were submitted.

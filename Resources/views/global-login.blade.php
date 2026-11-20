@@ -1,0 +1,99 @@
+<x-layouts.admin>
+    <x-slot name="title">{{ trans('theme::general.global_login_title') }}</x-slot>
+    <x-slot name="content">
+        <div class="max-w-5xl mx-auto grid gap-5">
+            <header>
+                <p class="text-xs text-gray-500">{{ trans('theme::general.instance_scope') }}</p>
+                <h1 class="text-2xl font-semibold">{{ trans('theme::general.global_login_title') }}</h1>
+                <p class="text-sm text-gray-500 mt-2">{{ trans('theme::general.global_login_description') }}</p>
+            </header>
+            @if (session('success'))
+                <p class="rounded-lg bg-green-100 p-3" role="status">{{ session('success') }}</p>
+            @endif
+            @if ($errors->any())
+                <div class="bg-red-100 rounded-lg p-3" role="alert">
+                    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                </div>
+            @endif
+            <form method="POST" enctype="multipart/form-data" action="{{ route('theme.login.global.save') }}" class="grid gap-5">
+                @csrf
+                <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
+                    <h2 class="text-lg font-semibold">{{ trans('theme::general.global_host_title') }}</h2>
+                    <label class="grid gap-1">
+                        <span>{{ trans('theme::general.global_host_help') }}</span>
+                        <input type="text" name="base_host" class="border rounded-md p-2" maxlength="253" required
+                            placeholder="example.org" value="{{ old('base_host', $options['base_host']) }}">
+                    </label>
+                    <p class="text-xs text-gray-500">{{ trans('theme::general.host_warning') }}</p>
+                </section>
+                <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
+                    <h2 class="text-lg font-semibold">{{ trans('theme::general.identity_section') }}</h2>
+                    <label class="grid gap-1">
+                        <span>{{ trans('theme::general.brand_name') }}</span>
+                        <input name="brand_name" class="border rounded-md p-2" maxlength="80" value="{{ old('brand_name', $options['brand_name']) }}">
+                    </label>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        @foreach (['logo' => trans('theme::general.logo'), 'favicon' => trans('theme::general.favicon'), 'login_background' => trans('theme::general.login_background')] as $key => $label)
+                            <article class="grid gap-3 border border-gray-200 rounded-lg p-4">
+                                <h3 class="font-semibold">{{ $label }}</h3>
+                                @if ($options[$key])
+                                    <img src="{{ asset('public/storage/' . $options[$key]) }}" alt="{{ $label }}"
+                                        class="object-contain rounded-lg bg-gray-100 max-h-44 w-full" loading="lazy">
+                                    <a class="text-sm underline text-purple" target="_blank" rel="noopener noreferrer"
+                                        href="{{ asset('public/storage/' . $options[$key]) }}">{{ trans('theme::general.view_current') }}</a>
+                                    <label class="flex items-center gap-2 text-sm">
+                                        <input type="checkbox" name="remove_{{ $key }}" value="1">
+                                        <span>{{ trans('theme::general.remove_image') }}</span>
+                                    </label>
+                                @else
+                                    <p class="text-sm text-gray-500">{{ trans('theme::general.no_image') }}</p>
+                                @endif
+                                <input type="file" name="{{ $key }}" accept="image/png,image/jpeg,image/webp">
+                            </article>
+                        @endforeach
+                    </div>
+                </section>
+                <section class="bg-white rounded-lg p-5 border border-gray-200 grid gap-4">
+                    <h2 class="text-lg font-semibold">{{ trans('theme::general.carousel_title') }}</h2>
+                    <p class="text-sm text-gray-500">{{ trans('theme::general.carousel_help') }}</p>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="login_slider" value="1" @checked(old('login_slider', $options['login_slider']))>
+                        <span>{{ trans('theme::general.login_slider') }}</span>
+                    </label>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        @for ($i = 0; $i < 6; $i++)
+                        <article class="grid gap-2 rounded-lg border border-gray-200 p-4">
+                            <h3 class="font-semibold">{{ trans('theme::general.carousel_slide') }} {{ $i + 1 }}</h3>
+                            @if (! empty($options['slides'][$i]['image']))
+                                <img src="{{ asset('public/storage/' . $options['slides'][$i]['image']) }}"
+                                    alt="{{ $options['slides'][$i]['title'] ?? '' }}"
+                                    class="w-full h-28 object-contain bg-gray-100 rounded-md" loading="lazy">
+                                <label class="text-sm flex items-center gap-2">
+                                    <input type="checkbox" name="remove_slide_{{ $i }}" value="1">
+                                    <span>{{ trans('theme::general.remove_image') }}</span>
+                                </label>
+                            @endif
+                            <label class="grid gap-1 text-sm">
+                                <span>{{ trans('theme::general.slide_title') }}</span>
+                                <input type="text" maxlength="120" name="slide_title[{{ $i }}]"
+                                    value="{{ old('slide_title.' . $i, $options['slides'][$i]['title'] ?? '') }}"
+                                    class="border rounded-md p-2">
+                            </label>
+                            <label class="grid gap-1 text-sm">
+                                <span>{{ trans('theme::general.slide_caption') }}</span>
+                                <textarea maxlength="280" name="slide_caption[{{ $i }}]"
+                                    class="border rounded-md p-2">{{ old('slide_caption.' . $i, $options['slides'][$i]['caption'] ?? '') }}</textarea>
+                            </label>
+                            <label class="grid gap-1 text-sm">
+                                <span>{{ trans('theme::general.replace_image') }}</span>
+                                <input type="file" accept="image/png,image/jpeg,image/webp" name="slide_image_{{ $i }}">
+                            </label>
+                        </article>
+                        @endfor
+                    </div>
+                </section>
+                <button type="submit" class="bg-purple text-white rounded-md px-5 py-3 justify-self-start">{{ trans('theme::general.save') }}</button>
+            </form>
+        </div>
+    </x-slot>
+</x-layouts.admin>

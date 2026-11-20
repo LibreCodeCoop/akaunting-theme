@@ -10,7 +10,10 @@ use App\Events\Menu\SettingsCreated;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Modules\Theme\Console\Commands\PruneExpiredHandoffs;
 use Modules\Theme\Domain\Appearance;
+use Modules\Theme\Domain\LoginAppearance;
+use Modules\Theme\Http\Middleware\HostContext;
 
 final class Main extends ServiceProvider
 {
@@ -18,6 +21,7 @@ final class Main extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/theme.php', 'theme');
         $this->loadRoutesFrom(__DIR__ . '/../Routes/admin.php');
+        $this->loadRoutesFrom(__DIR__ . '/../Routes/public.php');
     }
 
     public function boot(): void
@@ -25,12 +29,29 @@ final class Main extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../Resources/views', 'theme');
         $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'theme');
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+        // Runs after session.start in the native web group, before the
+        // company's IdentifyCompany controller middleware. The feature is
+        // inert until a global canonical host is explicitly configured.
+        app('router')->pushMiddlewareToGroup('web', HostContext::class);
+        if ($this->app->runningInConsole()) {
+            $this->commands([PruneExpiredHandoffs::class]);
+        }
 
         Event::listen(SettingsCreated::class, static function (SettingsCreated $event): void {
             if (auth()->check() && auth()->user()->can('read-settings-company')) {
-                $event->menu->route('theme.settings.index', trans('theme::general.name'), [], 191, [
+                $event->menu->route('theme.companies.index', trans('theme::general.name'), [], 191, [
                     'icon' => 'palette',
                     'search_keywords' => trans('theme::general.description'),
+                ]);
+            }
+            if (auth()->user()->can('read-settings-company')) {
+                $event->menu->route('theme.domains.index', trans('theme::general.domains_title'), [], 193, [
+                    'icon' => 'domain',
+                ]);
+            }
+            if (LoginAppearance::allowedEditor()) {
+                $event->menu->route('theme.login.global.index', trans('theme::general.global_login_title'), [], 192, [
+                    'icon' => 'web',
                 ]);
             }
         });
@@ -84,15 +105,15 @@ final class Main extends ServiceProvider
             ])->render());
         });
 
-        // The publicly visible login is instance-scoped, never chosen from user-controlled company IDs.
+        // The public login has no selected company yet. A trusted, active
+        // hostname resolves its brand; arbitrary query-string IDs do not.
         View::composer('components.layouts.auth.head', static function ($view): void {
-            $loginCompanyId = (int) config('theme.login_company_id', 0);
-            if ($loginCompanyId <= 0) {
+            $options = LoginAppearance::forHost(request()->getHost());
+            if ($options === null) {
                 return;
             }
-
             $view->getFactory()->startPush('head_end', view('theme::components.login', [
-                'options' => Appearance::options($loginCompanyId),
+                'options' => $options,
             ])->render());
         });
     }
